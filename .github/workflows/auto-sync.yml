@@ -52,7 +52,7 @@ jobs:
 
       - name: Run sync
         env:
-        FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true
+        ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
           ATHLETE_ID: ${{ secrets.ATHLETE_ID }}
           INTERVALS_KEY: ${{ secrets.INTERVALS_KEY }}
           GITHUB_REPO: ${{ github.repository }}
