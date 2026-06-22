@@ -5,7 +5,7 @@ on:
     # Run every 15 minutes
     - cron: '*/15 * * * *'
   workflow_dispatch:  # Allow manual trigger
-ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
+
 permissions:
   contents: write
   issues: write
