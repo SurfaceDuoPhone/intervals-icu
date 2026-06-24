@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T17:51:59.447234",
+  "generated_at": "2026-06-24T19:23:13.408258",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -650,6 +650,67 @@
           "duration_secs": 325,
           "avg_hr": 136,
           "max_hr": 158,
+          "zone": 1
+        }
+      ]
+    },
+    {
+      "activity_id": "i160066135",
+      "date": "2026-06-24",
+      "type": "Ride",
+      "name": "Nordhausen Radfahren",
+      "interval_summary": [
+        "4x 14m 118bpm",
+        "1x 11m39s 123bpm",
+        "1x 6m53s 117bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "840s@118bpm",
+          "duration_secs": 829,
+          "avg_hr": 109,
+          "max_hr": 122,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "840s@118bpm",
+          "duration_secs": 893,
+          "avg_hr": 119,
+          "max_hr": 137,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "840s@118bpm",
+          "duration_secs": 843,
+          "avg_hr": 120,
+          "max_hr": 136,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "699s@123bpm",
+          "duration_secs": 699,
+          "avg_hr": 123,
+          "max_hr": 135,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "840s@118bpm",
+          "duration_secs": 793,
+          "avg_hr": 125,
+          "max_hr": 134,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "413s@117bpm",
+          "duration_secs": 413,
+          "avg_hr": 117,
+          "max_hr": 131,
           "zone": 1
         }
       ]
