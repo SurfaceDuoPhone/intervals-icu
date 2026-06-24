@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T05:13:05.523226",
+  "generated_at": "2026-06-24T08:33:20.988727",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -588,6 +588,68 @@
           "duration_secs": 509,
           "avg_hr": 116,
           "max_hr": 134,
+          "zone": 1
+        }
+      ]
+    },
+    {
+      "activity_id": "i159887708",
+      "date": "2026-06-24",
+      "type": "Ride",
+      "name": "Bad Sachsa Radfahren",
+      "interval_summary": [
+        "1x 11m52s 119bpm",
+        "3x 10m11s 134bpm",
+        "1x 13m27s 139bpm",
+        "1x 5m25s 136bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "712s@119bpm",
+          "duration_secs": 712,
+          "avg_hr": 119,
+          "max_hr": 143,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "611s@134bpm",
+          "duration_secs": 583,
+          "avg_hr": 135,
+          "max_hr": 146,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "807s@139bpm",
+          "duration_secs": 807,
+          "avg_hr": 139,
+          "max_hr": 153,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "611s@134bpm",
+          "duration_secs": 618,
+          "avg_hr": 132,
+          "max_hr": 161,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "611s@134bpm",
+          "duration_secs": 632,
+          "avg_hr": 134,
+          "max_hr": 144,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "325s@136bpm",
+          "duration_secs": 325,
+          "avg_hr": 136,
+          "max_hr": 158,
           "zone": 1
         }
       ]
