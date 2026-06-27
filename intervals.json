@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27T15:44:32.777095",
+  "generated_at": "2026-06-27T16:46:42.362287",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -894,6 +894,34 @@
           "duration_secs": 1195,
           "avg_hr": 115,
           "max_hr": 130,
+          "zone": 1
+        }
+      ]
+    },
+    {
+      "activity_id": "i160772971",
+      "date": "2026-06-27",
+      "type": "Ride",
+      "name": "Lehrte Radfahren",
+      "interval_summary": [
+        "1x 11m41s 125bpm",
+        "1x 3m20s 121bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "701s@125bpm",
+          "duration_secs": 701,
+          "avg_hr": 125,
+          "max_hr": 140,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "200s@121bpm",
+          "duration_secs": 200,
+          "avg_hr": 121,
+          "max_hr": 136,
           "zone": 1
         }
       ]
