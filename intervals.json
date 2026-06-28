@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T14:30:23.402698",
+  "generated_at": "2026-06-28T15:54:55.500646",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -922,6 +922,25 @@
           "duration_secs": 200,
           "avg_hr": 121,
           "max_hr": 136,
+          "zone": 1
+        }
+      ]
+    },
+    {
+      "activity_id": "i160990951",
+      "date": "2026-06-28",
+      "type": "Ride",
+      "name": "Braunschweig Radfahren",
+      "interval_summary": [
+        "1x 17m25s 114bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "1045s@114bpm",
+          "duration_secs": 1045,
+          "avg_hr": 114,
+          "max_hr": 130,
           "zone": 1
         }
       ]
