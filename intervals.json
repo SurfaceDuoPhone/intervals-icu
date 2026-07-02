@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T23:10:20.508726",
+  "generated_at": "2026-07-02T00:19:11.753198",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -519,76 +519,6 @@
           "zone": 1,
           "training_load": 1.4698958,
           "decoupling": -23.087572
-        }
-      ]
-    },
-    {
-      "activity_id": "i158176288",
-      "date": "2026-06-17",
-      "type": "EBikeRide",
-      "name": "Bad Sachsa E-Bike-Fahren",
-      "interval_summary": [
-        "1x 11m1s 89bpm",
-        "3x 8m8s 117bpm",
-        "1x 12m52s 120bpm",
-        "2x 10m29s 118bpm"
-      ],
-      "intervals": [
-        {
-          "type": "WORK",
-          "label": "661s@89bpm",
-          "duration_secs": 661,
-          "avg_hr": 89,
-          "max_hr": 115,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "488s@117bpm",
-          "duration_secs": 475,
-          "avg_hr": 111,
-          "max_hr": 129,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "488s@117bpm",
-          "duration_secs": 480,
-          "avg_hr": 124,
-          "max_hr": 142,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "772s@120bpm",
-          "duration_secs": 772,
-          "avg_hr": 120,
-          "max_hr": 134,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "629s@118bpm",
-          "duration_secs": 639,
-          "avg_hr": 113,
-          "max_hr": 130,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "629s@118bpm",
-          "duration_secs": 618,
-          "avg_hr": 122,
-          "max_hr": 140,
-          "zone": 1
-        },
-        {
-          "type": "WORK",
-          "label": "488s@117bpm",
-          "duration_secs": 509,
-          "avg_hr": 116,
-          "max_hr": 134,
-          "zone": 1
         }
       ]
     },
