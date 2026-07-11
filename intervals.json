@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-11T17:12:17.458313",
+  "generated_at": "2026-07-11T18:05:24.205439",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -821,6 +821,82 @@
           "zone": 2,
           "training_load": 1.9114528,
           "decoupling": -11.6296425
+        }
+      ]
+    },
+    {
+      "activity_id": "i164801977",
+      "date": "2026-07-11",
+      "type": "Ride",
+      "name": "Lehrte - Lange Tour",
+      "interval_summary": [
+        "7x 17m32s 88bpm",
+        "1x 86s 86bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 1108,
+          "avg_hr": 81,
+          "max_hr": 93,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 982,
+          "avg_hr": 92,
+          "max_hr": 119,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 984,
+          "avg_hr": 86,
+          "max_hr": 95,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 1029,
+          "avg_hr": 90,
+          "max_hr": 104,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 1204,
+          "avg_hr": 90,
+          "max_hr": 109,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 1028,
+          "avg_hr": 89,
+          "max_hr": 103,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1052s@88bpm",
+          "duration_secs": 1026,
+          "avg_hr": 87,
+          "max_hr": 114,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "86s@86bpm",
+          "duration_secs": 86,
+          "avg_hr": 86,
+          "max_hr": 91,
+          "zone": 1
         }
       ]
     }
