@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-12T16:33:49.219329",
+  "generated_at": "2026-07-12T17:40:09.729008",
   "version": "3.112",
   "script_hash": "d151d2e118f2",
   "scan_hours": 72,
@@ -868,6 +868,33 @@
           "duration_secs": 86,
           "avg_hr": 86,
           "max_hr": 91,
+          "zone": 1
+        }
+      ]
+    },
+    {
+      "activity_id": "i165063668",
+      "date": "2026-07-12",
+      "type": "Swim",
+      "name": "Schwimmbad",
+      "interval_summary": [
+        "1x 875m 94bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "3437s@94bpm30rpm",
+          "duration_secs": 3437,
+          "avg_hr": 94,
+          "max_hr": 121,
+          "avg_cadence": 29.891766,
+          "zone": 1
+        },
+        {
+          "type": "RECOVERY",
+          "duration_secs": 1,
+          "avg_hr": 99,
+          "max_hr": 99,
           "zone": 1
         }
       ]
