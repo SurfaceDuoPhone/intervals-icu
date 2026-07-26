@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a1a2e">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="version" content="2.1">
 <link rel="manifest" href="manifest.json">
 <title>Fitness Dashboard</title>
 <style>
@@ -102,7 +106,7 @@ function fetchFromGitHub(){
   var url="https://raw.githubusercontent.com/"+GH_REPO+"/main/"+GH_FILE+"?t="+Date.now();
   var controller=new AbortController();
   var timeout=setTimeout(function(){controller.abort();},15000);
-  return fetch(url,{signal:controller.signal,cache:"no-store"})
+  return fetch(url+'?v='+Date.now(),{signal:controller.signal,cache:"no-store"})
     .then(function(r){clearTimeout(timeout);if(!r.ok)throw new Error("GitHub "+r.status);return r.json()})
     .catch(function(e){clearTimeout(timeout);throw e;});
 }
@@ -465,6 +469,11 @@ function load(){
     });
 }
 
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(r){
+    r.update();
+  }).catch(function(){});
+}
 load();
 setInterval(load,300000);
 </script>
