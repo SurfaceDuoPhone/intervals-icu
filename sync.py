@@ -244,12 +244,18 @@ from collections import defaultdict
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-# Garmin Blood Pressure (optional)
+# Garmin Blood Pressure (optional) - auto-install if missing
 try:
     from garminconnect import Garmin as GarminConnect
     GARMIN_BP_AVAILABLE = True
 except ImportError:
-    GARMIN_BP_AVAILABLE = False
+    try:
+        import subprocess, sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "garminconnect>=0.2.0", "-q"])
+        from garminconnect import Garmin as GarminConnect
+        GARMIN_BP_AVAILABLE = True
+    except Exception:
+        GARMIN_BP_AVAILABLE = False
 
 
 class IntervalsSync:
