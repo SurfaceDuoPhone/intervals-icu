@@ -133,6 +133,8 @@ function render(D){
     if(_oHrv) ovHtml+=sr("HRV",_oHrv+" ms",_oHrv>=40?"sg":_oHrv>=30?"sw":"sb");
     if(m.sleep_hours) ovHtml+=sr("Schlaf",m.sleep_formatted||(m.sleep_hours+"h"),m.sleep_hours>=7?"sg":"sw");
     if(_oSpo2) ovHtml+=sr("SpO2",_oSpo2+"%","sg");
+    var _oVo2=null;if(wd.length){for(var _ovi=wd.length-1;_ovi>=0;_ovi--){if(wd[_ovi].vo2max){_oVo2=wd[_ovi].vo2max;break;}}}
+    if(_oVo2) ovHtml+=sr("VO2max",_oVo2+" ml/kg/min",_oVo2>=50?"sg":_oVo2>=40?"sw":"sb");
     if(f.ctl!==undefined) ovHtml+=sr("Fitness (CTL)",f.ctl.toFixed(1),"sg");
     if(f.atl!==undefined) ovHtml+=sr("Load (ATL)",f.atl.toFixed(1),"sw");
     if(f.tsb!==undefined) ovHtml+=sr("Balance (TSB)",f.tsb.toFixed(1),f.tsb>=0?"sg":"sb");
@@ -219,6 +221,7 @@ function render(D){
       var _rhrV=m.resting_hr||null;if(!_rhrV){for(var _ri2=wd.length-1;_ri2>=0;_ri2--){if(wd[_ri2].resting_hr){_rhrV=wd[_ri2].resting_hr;break;}}}
       var _hrvV=m.hrv||null;if(!_hrvV){for(var _ri3=wd.length-1;_ri3>=0;_ri3--){if(wd[_ri3].hrv_rmssd){_hrvV=wd[_ri3].hrv_rmssd;break;}}}
       var _bfV=m.body_fat_pct||null;if(!_bfV){for(var _ri4=wd.length-1;_ri4>=0;_ri4--){if(wd[_ri4].body_fat_pct){_bfV=wd[_ri4].body_fat_pct;break;}}}
+      var _vo2V=m.vo2max||null;if(!_vo2V){for(var _ri5=wd.length-1;_ri5>=0;_ri5--){if(wd[_ri5].vo2max){_vo2V=wd[_ri5].vo2max;break;}}}
       document.getElementById('bod').innerHTML=
         sr('Gewicht',w.weight_latest_kg+' kg')+
         sr('7d Durchschnitt',w.weight_7d_avg_kg?w.weight_7d_avg_kg+' kg':'?')+
@@ -228,7 +231,8 @@ function render(D){
         sr('Ruhepuls',_rhrV?(_rhrV+' bpm'):'?','sg')+
         (_bfV?sr('Körperfett',_bfV+'%','sg'):sr('Körperfett','–','neutral'))+
         sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
-        sr('Atemfrequenz',_respV?(_respV+'/min'):'?');
+        sr('Atemfrequenz',_respV?(_respV+'/min'):'?')+
+        (_vo2V?sr('VO2max',_vo2V+' ml/kg/min',_vo2V>=50?'sg':_vo2V>=40?'sw':'sb'):sr('VO2max','–','neutral'));
     }
 
     // GEWICHTSCHART
@@ -412,6 +416,16 @@ function generateAssessment(D){
     if(rv>=12&&rv<=20) lines.push('<span class="good">Atemfrequenz normal</span> ('+rv+'/min).');
     else if(rv>20) lines.push('<span class="warn">Atemfrequenz erhöht</span> ('+rv+'/min). Stress oder Anstrengung möglich.');
     else lines.push('<span class="neutral">Atemfrequenz niedrig</span> ('+rv+'/min).');
+  }
+
+  // VO2max
+  var _aVo2=null;if(wd.length){for(var _avi=wd.length-1;_avi>=0;_avi--){if(wd[_avi].vo2max){_aVo2=wd[_avi].vo2max;break;}}}
+  if(_aVo2){
+    if(_aVo2>=55) lines.push('<span class="good">Exzellente aerobe Fitness</span> ('+_aVo2+' ml/kg/min). Spitzenniveau für Ausdauerathleten.');
+    else if(_aVo2>=45) lines.push('<span class="good">Sehr gute aerobe Fitness</span> ('+_aVo2+' ml/kg/min). Überdurchschnittlich – weiter so!');
+    else if(_aVo2>=40) lines.push('<span class="warn">Gute aerobe Fitness</span> ('+_aVo2+' ml/kg/min). Regelmäßiges Ausdauertraining kann VO2max weiter steigern.');
+    else if(_aVo2>=35) lines.push('<span class="warn">Durchschnittliche aerobe Fitness</span> ('+_aVo2+' ml/kg/min). Mehr Intervalltraining könnte helfen.');
+    else lines.push('<span class="bad">VO2max niedrig</span> ('+_aVo2+' ml/kg/min). Regelmäßiges Training empfohlen für kardiovaskuläre Gesundheit.');
   }
 
   // Resting HR
