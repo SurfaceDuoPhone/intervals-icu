@@ -2747,8 +2747,8 @@ class IntervalsSync:
                     # Vitals
                     "spO2": latest_wellness.get("spO2"),
                     "blood_glucose": latest_wellness.get("bloodGlucose"),
-                    "systolic": (garmin_bp.get(newest, {}).get("systolic") or latest_wellness.get("systolic")) if garmin_bp else latest_wellness.get("systolic"),
-                    "diastolic": (garmin_bp.get(newest, {}).get("diastolic") or latest_wellness.get("diastolic")) if garmin_bp else latest_wellness.get("diastolic"),
+                    "systolic": latest_wellness.get("systolic"),
+                    "diastolic": latest_wellness.get("diastolic"),
                     "baevsky_si": latest_wellness.get("baevskySI"),
                     "lactate": latest_wellness.get("lactate"),
                     "respiration": latest_wellness.get("respiration"),
@@ -2765,19 +2765,6 @@ class IntervalsSync:
                     # Cycle
                     "menstrual_phase": latest_wellness.get("menstrualPhase"),
                     "menstrual_phase_predicted": latest_wellness.get("menstrualPhasePredicted"),
-                    # Platform
-
-        # === Garmin Blood Pressure overlay ===
-        garmin_bp = self._fetch_garmin_blood_pressure(days=7)
-        if garmin_bp:
-            print(f"  Garmin BP: {len(garmin_bp)} days fetched")
-            # Overlay Garmin BP onto wellness entries
-            for w_entry in wellness:
-                d_str = w_entry.get("date") or w_entry.get("start")
-                if d_str and d_str in garmin_bp and not w_entry.get("systolic"):
-                    bp = garmin_bp[d_str]
-                    w_entry["systolic"] = bp.get("systolic")
-                    w_entry["diastolic"] = bp.get("diastolic")
 
                     "readiness": latest_wellness.get("readiness")
                 }
@@ -2803,6 +2790,24 @@ class IntervalsSync:
         )
         if weight_signal:
             data["current_status"]["weight"] = weight_signal
+
+        # === Garmin Blood Pressure overlay ===
+        garmin_bp = self._fetch_garmin_blood_pressure(days=7)
+        if garmin_bp:
+            print(f"  Garmin BP: {len(garmin_bp)} days fetched")
+            # Overlay Garmin BP onto wellness entries
+            for w_entry in wellness:
+                d_str = w_entry.get("date") or w_entry.get("start")
+                if d_str and d_str in garmin_bp and not w_entry.get("systolic"):
+                    bp = garmin_bp[d_str]
+                    w_entry["systolic"] = bp.get("systolic")
+                    w_entry["diastolic"] = bp.get("diastolic")
+            # Update current_metrics with latest Garmin BP
+            newest_date = max(garmin_bp.keys()) if garmin_bp else None
+            if newest_date:
+                bp = garmin_bp[newest_date]
+                data["current_status"]["current_metrics"]["systolic"] = bp.get("systolic")
+                data["current_status"]["current_metrics"]["diastolic"] = bp.get("diastolic")
 
         return data
 
