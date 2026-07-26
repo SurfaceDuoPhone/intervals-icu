@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="manifest.json">
+<title>Fitness Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+.header{background:var(--card);padding:12px;text-align:center;border-bottom:1px solid var(--border)}
+.header h1{font-size:16px}
+.header .sync{font-size:10px;color:var(--green);margin-top:4px}
+.container{max-width:600px;margin:0 auto;padding:10px}
+.card{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card h2{font-size:13px;color:var(--accent);margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--muted)}.sv{font-weight:600}
+.sg{color:var(--green)}.sw{color:var(--yellow)}.sb{color:var(--accent)}
+.bp-big{text-align:center;font-size:42px;font-weight:700;letter-spacing:2px;padding:12px 0}
+.bp-lbl{text-align:center;font-size:11px;color:var(--muted)}
+.bp-cat{display:inline-block;padding:3px 10px;border-radius:16px;font-size:11px;font-weight:600;text-align:center;margin-top:6px}
+.bp-ok{background:#00e67622;color:var(--green)}
+.bp-warn{background:#ffd60022;color:var(--yellow)}
+.chart{display:flex;align-items:flex-end;gap:2px;height:50px;margin-top:8px}
+.bar{flex:1;border-radius:2px 2px 0 0;min-width:2px}
+.bs{background:var(--accent)}.bd{background:var(--blue)}.bsl{background:var(--blue)}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100}
+.ni{text-align:center;cursor:pointer;padding:4px 10px;border-radius:6px;font-size:10px;color:var(--muted)}
+.ni:active,.ni.active{background:var(--border);color:var(--text)}
+.ni .ic{font-size:20px}
+.sec{display:none}.sec.on{display:block}
+.loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+.err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
+.reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+
+.assess{line-height:1.6;font-size:13px;color:var(--text)}
+.assess h3{color:var(--accent);font-size:14px;margin:12px 0 6px}
+.assess .good{color:var(--green)}
+.assess .warn{color:var(--yellow)}
+.assess .bad{color:var(--accent)}
+.assess .neutral{color:var(--muted)}
+.assess .tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin:2px}
+.assess .tag-ok{background:#00e67622;color:var(--green)}
+.assess .tag-warn{background:#ffd60022;color:var(--yellow)}
+.assess .tag-bad{background:#e9456022;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>Fitness Dashboard</h1>
+<div class="sync" id="sync">⏳ Lade...</div>
+</div>
+<div class="container">
+<div class="sec on" id="s-overview">
+<div class="card"><h2>📊 Übersicht</h2><div id="ov"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🩺 Blutdruck</h2><div id="bp"><div class="loading">Lade...</div></div><div class="chart" id="bpC"></div></div>
+<div class="card"><h2>📋 Fitness Report</h2><div id="rpt"><div class="loading">Lade Report...</div></div></div>
+<div class="card"><h2>📝 Bewertung</h2><div id="assess"><div class="loading">Analysiere...</div></div></div>
+</div>
+<div class="sec" id="s-sleep">
+<div class="card"><h2>😴 Schlaf</h2><div id="slp"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>💓 HRV Trend</h2><div id="hrv"><div class="loading">Lade...</div></div></div>
+</div>
+<div class="sec" id="s-body">
+<div class="card"><h2>⚖️ Körper</h2><div id="bod"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📉 Gewichtstrend</h2><div id="wtChart"><div class="loading">Lade...</div></div></div>
+</div>
+<div class="sec" id="s-train">
+<div class="card"><h2>📊 Training</h2><div id="trn"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🏋️ Leistung</h2><div id="pow"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🏃 Letzte Aktivitäten</h2><div id="acts"><div class="loading">Lade...</div></div></div>
+</div>
+</div>
+<div class="nav">
+<div class="ni active" onclick="go(this,'overview')"><div class="ic">📊</div>Übersicht</div>
+<div class="ni" onclick="go(this,'sleep')"><div class="ic">😴</div>Schlaf</div>
+<div class="ni" onclick="go(this,'body')"><div class="ic">⚖️</div>Körper</div>
+<div class="ni" onclick="go(this,'train')"><div class="ic">🚴</div>Training</div>
+</div>
+<script>
+var GH_TOKEN="";
+var GH_REPO="SurfaceDuoPhone/intervals-icu";
+var GH_FILE="latest.json";
+
+function go(el,id){
+  document.querySelectorAll('.sec').forEach(function(s){s.classList.remove('on')});
+  document.getElementById('s-'+id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active')});
+  el.classList.add('active');
+}
+
+function sr(l,v,c){
+  return '<div class="sr"><span class="sl">'+l+'</span><span class="sv '+(c||'')+'">'+v+'</span></div>';
+}
+
+function fetchFromGitHub(){
+  var url="https://raw.githubusercontent.com/"+GH_REPO+"/main/"+GH_FILE+"?t="+Date.now();
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},15000);
+  return fetch(url,{signal:controller.signal,cache:"no-store"})
+    .then(function(r){clearTimeout(timeout);if(!r.ok)throw new Error("GitHub "+r.status);return r.json()})
+    .catch(function(e){clearTimeout(timeout);throw e;});
+}
+
+function render(D){
+  try{
+    var rpt=D||{};
+    var cs=rpt.current_status||{};
+    var dm=rpt.derived_metrics||{};
+    var m=cs.current_metrics||{};
+    var w=cs.weight||{};
+    var f=cs.fitness||{};
+    var wd=rpt.wellness_data||[];
+    var t=rpt.summary||{};
+    var ws=rpt.workout_summary_stats||{};
+
+    // ÜBERSICHT
+    var ovHtml="";
+    if(m.weight_kg) ovHtml+=sr("Gewicht",m.weight_kg+" kg");
+    if(m.resting_hr) ovHtml+=sr("Ruhepuls",m.resting_hr+" bpm",m.resting_hr<=55?"sg":m.resting_hr<=65?"sw":"sb");
+    if(m.hrv) ovHtml+=sr("HRV",m.hrv+" ms",m.hrv>=40?"sg":m.hrv>=30?"sw":"sb");
+    if(m.sleep_hours) ovHtml+=sr("Schlaf",m.sleep_formatted||(m.sleep_hours+"h"),m.sleep_hours>=7?"sg":"sw");
+    if(f.ctl!==undefined) ovHtml+=sr("Fitness (CTL)",f.ctl.toFixed(1),"sg");
+    if(f.atl!==undefined) ovHtml+=sr("Load (ATL)",f.atl.toFixed(1),"sw");
+    if(f.tsb!==undefined) ovHtml+=sr("Balance (TSB)",f.tsb.toFixed(1),f.tsb>=0?"sg":"sb");
+    if(dm.acwr) ovHtml+=sr("ACWR",dm.acwr,dm.acwr_interpretation==="optimal"?"sg":"sw");
+    if(dm.recovery_index!==undefined) ovHtml+=sr("Recovery",dm.recovery_index.toFixed(2),dm.recovery_index<=1?"sg":"sw");
+    document.getElementById('ov').innerHTML=ovHtml||'<div class="err">Keine Daten</div>';
+
+    // BLUTDRUCK
+    var bpEntry=null;
+    for(var i=wd.length-1;i>=0;i--){
+      if(wd[i].systolic&&wd[i].diastolic){bpEntry=wd[i];break;}
+    }
+    if(bpEntry){
+      var sy=bpEntry.systolic,dy=bpEntry.diastolic,hr=m.resting_hr||'-';
+      var cat='Optimal',cls='bp-ok';
+      if(sy>=130){cat='Normal';cls='bp-ok'}
+      if(sy>=140){cat='Hochnormal';cls='bp-warn'}
+      if(sy>=160){cat='Hypertonie 2';cls='sb'}
+      if(sy>=180){cat='Krise!';cls='sb'}
+      document.getElementById('bp').innerHTML='<div class="bp-big">'+sy+'/'+dy+'</div><div class="bp-lbl">mmHg · Puls '+hr+' bpm</div><div style="text-align:center"><span class="bp-cat '+cls+'">'+cat+'</span></div>';
+    }else{
+      document.getElementById('bp').innerHTML='<div class="err">Keine Blutdruckdaten</div>';
+    }
+
+    // BLUTDRUCK CHART
+    var bpData=wd.filter(function(d){return d.systolic&&d.diastolic});
+    if(bpData.length){
+      var maxSy=Math.max.apply(null,bpData.map(function(d){return d.systolic}))+10;
+      var minDia=Math.min.apply(null,bpData.map(function(d){return d.diastolic}))-10;
+      var range=maxSy-minDia||1;
+      document.getElementById('bpC').innerHTML='<div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding:4px 0">'+bpData.map(function(s){
+        var hSys=Math.max(10,((s.systolic-minDia)/range)*80);
+        var hDia=Math.max(10,((s.diastolic-minDia)/range)*80);
+        return '<div style="flex:1;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:1px"><div style="width:100%;height:'+hSys+'px;background:var(--red);border-radius:3px 3px 0 0;opacity:0.7" title="'+s.date+': '+s.systolic+'/'+s.diastolic+'"></div><div style="width:100%;height:'+(hSys-hDia)+'px;background:var(--green);border-radius:0;opacity:0.5" title="'+s.date+': '+s.diastolic+'"></div></div><div style="font-size:8px;color:var(--muted);margin-top:2px">'+(s.date||'').slice(5)+'</div></div>';
+      }).join('')+'</div>';
+    }
+
+    // FITNESS REPORT
+    if(rpt.metadata){
+      var md=rpt.metadata;
+      document.getElementById('rpt').innerHTML=
+        sr('Version','v'+(md.version||'?'))+
+        sr('Aktualisiert',(md.last_updated||'?').slice(0,16))+
+        sr('Phase',dm.phase_detected||'?','sg')+
+        sr('ACWR',dm.acwr||'?','sg')+
+        sr('TSB',(f.tsb||0).toFixed(0),(f.tsb||0)>=0?'sg':'sw')+
+        sr('Monotony',dm.monotony||'?')+
+        sr('Strain',dm.strain||'?');
+    }
+
+    // SCHLAF
+    var slpAll=wd.filter(function(d){return d.sleep_hours});
+    if(slpAll.length){
+      var avg=(slpAll.reduce(function(a,b){return a+b.sleep_hours},0)/slpAll.length).toFixed(1);
+      var best=Math.max.apply(null,slpAll.map(function(s){return s.sleep_hours})).toFixed(1);
+      var last=slpAll[slpAll.length-1];
+      document.getElementById('slp').innerHTML=
+        sr('Letzte Nacht',last.sleep_formatted||last.sleep_hours+'h')+
+        sr('⌀ (7 Tage)',avg+'h',parseFloat(avg)>=7?'sg':'sw')+
+        sr('Beste Nacht',best+'h','sg')+
+        '<div class="chart">'+slpAll.slice(-14).map(function(s){return '<div class="bar bsl" style="height:'+Math.min(s.sleep_hours/9*50,50)+'px" title="'+s.date+': '+s.sleep_hours+'h"></div>'}).join('')+'</div>';
+    }else{
+      document.getElementById('slp').innerHTML='<div class="err">Keine Schlafdaten</div>';
+    }
+
+    // HRV TREND
+    var hrvAll=wd.filter(function(d){return d.hrv_rmssd});
+    if(hrvAll.length){
+      var hrvAvg=(hrvAll.reduce(function(a,b){return a+b.hrv_rmssd},0)/hrvAll.length).toFixed(1);
+      document.getElementById('hrv').innerHTML=
+        sr('Aktuell',hrvAll[hrvAll.length-1].hrv_rmssd+' ms','sg')+
+        sr('⌀ (Periode)',hrvAvg+' ms','sg')+
+        sr('Baseline 7d',dm.hrv_baseline_7d||'?')+
+        sr('Baseline 28d',dm.hrv_baseline_28d||'?')+
+        '<div class="chart">'+hrvAll.slice(-14).map(function(s){return '<div class="bar bd" style="height:'+Math.min(s.hrv_rmssd/60*50,50)+'px" title="'+s.date+': '+s.hrv_rmssd+'ms"></div>'}).join('')+'</div>';
+    }else{
+      document.getElementById('hrv').innerHTML='<div class="err">Keine HRV-Daten</div>';
+    }
+
+    // KÖRPER
+    if(w.weight_latest_kg){
+      document.getElementById('bod').innerHTML=
+        sr('Gewicht',w.weight_latest_kg+' kg')+
+        sr('7d Durchschnitt',w.weight_7d_avg_kg?w.weight_7d_avg_kg+' kg':'?')+
+        sr('W/kg',w.wkg_current||'?','sg')+
+        sr('Trend (28d)',w.weight_28d_slope_kg_per_week?(w.weight_28d_slope_kg_per_week>0?'▲':'▼')+' '+Math.abs(w.weight_28d_slope_kg_per_week).toFixed(2)+' kg/Wo':'?')+
+        sr('HRV',m.hrv||'?','sg')+
+        sr('Ruhepuls',m.resting_hr||'?','sg')+
+        (m.body_fat_pct?sr('Körperfett',m.body_fat_pct+'%','sg'):'')+
+        sr('SpO2',wd.length&&wd[wd.length-1].spO2?(wd[wd.length-1].spO2+'%'):'?')+
+        sr('Atemfrequenz',wd.length&&wd[wd.length-1].respiration?(wd[wd.length-1].respiration+'/min'):'?');
+    }
+
+    // GEWICHTSCHART
+    var wtData=wd.filter(function(d){return d.weight_kg});
+    if(wtData.length){
+      document.getElementById('wtChart').innerHTML='<div class="chart" style="height:80px">'+wtData.map(function(s){
+        var h=Math.max(10,((s.weight_kg-70)/(85-70))*80);
+        return '<div class="bar bs" style="height:'+h+'px" title="'+s.date+': '+s.weight_kg+'kg"></div>';
+      }).join('')+'</div>';
+    }
+
+    // TRAINING
+    if(ws.total_training_formatted||f.ctl!==undefined){
+      var tid=dm.seiler_tid_7d||{};
+      document.getElementById('trn').innerHTML=
+        sr('Gesamt',ws.total_training_formatted?(ws.total_training_formatted+' | '+ws.total_tss+' TSS'):(f.ctl?((f.ctl).toFixed(0)+' CTL'):'?'))+
+        sr('Aktivitäten',ws.activities_count?ws.activities_count+'×':'?')+
+        sr('Z1 (Easy)',(tid.z1_pct||0).toFixed(0)+'%','sg')+
+        sr('Z3 (Hard)',(tid.z3_pct||0).toFixed(0)+'%')+
+        sr('Polarisation',tid.classification||'?','sg')+
+        sr('Phase',dm.phase_detected||'?','sg')+
+        sr('Grey Zone',(dm.grey_zone_percentage||0).toFixed(0)+'%',dm.grey_zone_percentage>15?'sw':'sg')+
+        sr('Consistency',dm.consistency_index!=null?dm.consistency_index:'–');
+    }
+
+    // LEISTUNG
+    var th=cs.thresholds||{};
+    var sp=th.sports&&th.sports.cycling||{};
+    if(sp.ftp||th.eftp||sp.lthr){
+      document.getElementById('pow').innerHTML=
+        sr('FTP',sp.ftp? sp.ftp+' W':'?')+
+        sr('eFTP',th.eftp? th.eftp+' W':'?','sg')+
+        sr('W\u2033',th.w_prime_kj? th.w_prime_kj+' kJ':'?')+
+        sr('Pmax',th.p_max? th.p_max+' W':'?')+
+        sr('W/kg',w.wkg_current? w.wkg_current:'?','sg')+
+        sr('LTHR',sp.lthr? sp.lthr+' bpm':'?');
+    }
+
+    var ver=(rpt.metadata||{}).version||'?';
+    var upd=(rpt.metadata||{}).last_updated||'';
+    document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v'+ver+(upd?' | '+upd.slice(5,16):'');
+    localStorage.setItem('fd_cache',JSON.stringify(D));
+    generateAssessment(D);
+    localStorage.setItem('fd_cache_time',String(Date.now()));
+  }catch(e){
+    document.getElementById('sync').textContent='❌ Render: '+e.message;
+    console.error(e);
+  }
+}
+
+
+function generateAssessment(D){
+  var rpt=D||{};
+  var cs=rpt.current_status||{};
+  var dm=rpt.derived_metrics||{};
+  var m=cs.current_metrics||{};
+  var w=cs.weight||{};
+  var f=cs.fitness||{};
+  var wd=rpt.wellness_data||[];
+  var ws=rpt.weekly_summary||rpt.workout_summary_stats||{};
+  var ap=rpt.athlete_profile||{};
+  var th=cs.thresholds||{};
+  var lines=[];
+  var tags=[];
+
+  // Overall fitness assessment
+  if(f.ctl!==undefined){
+    if(f.ctl>60) {lines.push('<span class="good">Hohe aerobe Fitness</span> (CTL '+f.ctl.toFixed(0)+'). Du bist in hervorragendem Trainingszustand.');tags.push({t:'Fitness',c:'tag-ok'});}
+    else if(f.ctl>30) {lines.push('<span class="good">Solide aerobe Fitness</span> (CTL '+f.ctl.toFixed(0)+'). Solide Grundlage für Ausdauerleistung.');tags.push({t:'Fitness',c:'tag-ok'});}
+    else if(f.ctl>15) {lines.push('<span class="warn">Grundlegende Fitness</span> (CTL '+f.ctl.toFixed(0)+'). Potenzial für mehr Belastung.');tags.push({t:'Fitness',c:'tag-warn'});}
+    else {lines.push('<span class="bad">Niedrige Fitness</span> (CTL '+f.ctl.toFixed(0)+'). Aufbau empfohlen.');tags.push({t:'Fitness',c:'tag-bad'});}
+  }
+
+  // Training load balance
+  if(f.tsb!==undefined){
+    if(f.tsb>10) lines.push('<span class="good">Erholungsphase</span> (TSB '+f.tsb.toFixed(0)+'). Ideal zum Regenerieren oder für Wettkampfvorbereitung.');
+    else if(f.tsb>=-10) lines.push('<span class="good">Ausgewogenes Training</span> (TSB '+f.tsb.toFixed(0)+'). Gute Balance zwischen Belastung und Erholung.');
+    else if(f.tsb>=-30) lines.push('<span class="warn">Hohe Trainingsbelastung</span> (TSB '+f.tsb.toFixed(0)+'). Belastungsphase – auf Überlastung achten.');
+    else lines.push('<span class="bad">Sehr hohe Belastung</span> (TSB '+f.tsb.toFixed(0)+'). Risiko von Übertraining – Erholung einplanen.');
+  }
+
+  // ACWR
+  if(dm.acwr){
+    if(dm.acwr>=0.8&&dm.acwr<=1.3) tags.push({t:'ACWR: '+dm.acwr+' ✓',c:'tag-ok'});
+    else if(dm.acwr<0.8) tags.push({t:'ACWR: '+dm.acwr+' Untermensch',c:'tag-warn'});
+    else tags.push({t:'ACWR: '+dm.acwr+' Überlastung',c:'tag-bad'});
+  }
+
+  // Training polarization
+  if(dm.seiler_tid_7d){
+    var tid=dm.seiler_tid_7d;
+    if(tid.classification==='Polarized') lines.push('<span class="good">Polarisiertes Training</span> ('+(tid.z1_pct||0).toFixed(0)+'% Easy / '+(tid.z3_pct||0).toFixed(0)+'% Hard). Optimaler Ansatz für Ausdauerleistung.');
+    else if(tid.classification==='Pyramidal') lines.push('<span class="warn">Pyramidale Verteilung</span>. Mehr Mittelzone als ideal – ggf. Easy-Zeiten verlängern und Intensität erhöhen.');
+    else if(tid.classification==='Threshold') lines.push('<span class="bad">Threshold-dominiert</span>. Zu viel Mittelzone – klassischer Grey-Zone-Fehler. Training polarisieren!');
+  }
+
+  // Weight trend
+  if(w.weight_28d_slope_kg_per_week){
+    var slope=w.weight_28d_slope_kg_per_week;
+    if(slope<-0.5) lines.push('<span class="warn">Schneller Gewichtsverlust</span> ('+slope.toFixed(2)+' kg/Wo). Eher sportbedingt oder bewusst? Auf ausreichend Nährstoffe achten.');
+    else if(slope<-0.1) lines.push('<span class="good">Leichter Gewichtsrückgang</span> ('+slope.toFixed(2)+' kg/Wo). Moderate Abnahme im Rahmen.');
+    else if(slope>0.5) lines.push('<span class="warn">Gewichtszunahme</span> ('+'+'+slope.toFixed(2)+' kg/Wo). Falls unerwünscht, Ernährung überprüfen.');
+    else lines.push('<span class="good">Stables Gewicht</span> ('+slope.toFixed(2)+' kg/Wo). Ideal für Leistungserhalt.');
+  }
+
+  // HRV
+  if(m.hrv){
+    if(m.hrv>=50) lines.push('<span class="good">Hohe HRV</span> ('+m.hrv+' ms). Zeichen für gute Erholung und kardiale Fitness.');
+    else if(m.hrv>=35) lines.push('<span class="good">Solide HRV</span> ('+m.hrv+' ms). Im Normalbereich für dein Alter.');
+    else if(m.hrv>=25) lines.push('<span class="warn">Erniedrigte HRV</span> ('+m.hrv+' ms). Möglicherweise Stress oder unzureichende Erholung.');
+    else lines.push('<span class="bad">Niedrige HRV</span> ('+m.hrv+' ms). Erholung empfohlen – Training leichter gestalten.');
+  }
+
+  // Sleep
+  if(m.sleep_hours){
+    if(m.sleep_hours>=8) lines.push('<span class="good">Ausreichend Schlaf</span> ('+m.sleep_formatted+'). Perfekt für Regeneration.');
+    else if(m.sleep_hours>=7) lines.push('<span class="good">Guter Schlaf</span> ('+m.sleep_formatted+'). Im empfohlenen Bereich.');
+    else if(m.sleep_hours>=6) lines.push('<span class="warn">Zu wenig Schlaf</span> ('+m.sleep_formatted+'). 7+ Stunden wären besser für Erholung und Leistung.');
+    else lines.push('<span class="bad">Schlafmangel</span> ('+m.sleep_formatted+'). Deutlich zu wenig – Leistung und Erholung leiden.');
+  }
+
+  // Blood pressure
+  var bpEntry=null;
+  for(var i=wd.length-1;i>=0;i--){
+    if(wd[i].systolic&&wd[i].diastolic){bpEntry=wd[i];break;}
+  }
+  if(bpEntry){
+    var sy=bpEntry.systolic;
+    if(sy>=160) lines.push('<span class="bad">Blutdruck hoch</span> ('+sy+'/'+bpEntry.diastolic+' mmHg). Arzt konsultieren!');
+    else if(sy>=140) lines.push('<span class="warn">Blutdruck leicht erhöht</span> ('+sy+'/'+bpEntry.diastolic+' mmHg). Monitoring empfohlen.');
+    else if(sy>=130) lines.push('<span class="neutral">Blutdruck im oberen Normbereich</span> ('+sy+'/'+bpEntry.diastolic+' mmHg).');
+    else if(sy>=90) lines.push('<span class="good">Optimaler Blutdruck</span> ('+sy+'/'+bpEntry.diastolic+' mmHg).');
+  }
+
+  // SpO2
+  var spo2Entry=null;
+  for(var i=wd.length-1;i>=0;i--){
+    if(wd[i].spO2){spo2Entry=wd[i];break;}
+  }
+  if(spo2Entry){
+    var sp=spo2Entry.spO2;
+    if(sp>=95) lines.push('<span class="good">Sauerstoffsättigung optimal</span> ('+sp+'%). Keine Auffälligkeiten.');
+    else if(sp>=90) lines.push('<span class="warn">Sauerstoffsättigung leicht erniedrigt</span> ('+sp+'%). Beobachten.');
+    else lines.push('<span class="bad">Sauerstoffsättigung niedrig</span> ('+sp+'%). Arzt konsultieren!');
+  }
+
+  // Respiration
+  var respEntry=null;
+  for(var i=wd.length-1;i>=0;i--){
+    if(wd[i].respiration){respEntry=wd[i];break;}
+  }
+  if(respEntry){
+    var rv=respEntry.respiration;
+    if(rv>=12&&rv<=20) lines.push('<span class="good">Atemfrequenz normal</span> ('+rv+'/min).');
+    else if(rv>20) lines.push('<span class="warn">Atemfrequenz erhöht</span> ('+rv+'/min). Stress oder Anstrengung möglich.');
+    else lines.push('<span class="neutral">Atemfrequenz niedrig</span> ('+rv+'/min).');
+  }
+
+  // Resting HR
+  if(m.resting_hr){
+    if(m.resting_hr<=50) lines.push('<span class="good">Exzellenter Ruhepuls</span> ('+m.resting_hr+' bpm). Zeichen hoher kardiovaskulärer Fitness.');
+    else if(m.resting_hr<=60) lines.push('<span class="good">Guter Ruhepuls</span> ('+m.resting_hr+' bpm). Gesunder Bereich.');
+    else if(m.resting_hr<=70) lines.push('<span class="neutral">Ruhepuls durchschnittlich</span> ('+m.resting_hr+' bpm).');
+    else lines.push('<span class="warn">Ruhepuls erhöht</span> ('+m.resting_hr+' bpm). Kann auf Stress, Übertraining oder Konditionsverlust hindeuten.');
+  }
+
+  // Sport-specific: FTP / eFTP
+  if(th.eftp||w.wkg_current){
+    var parts=[];
+    if(th.eftp) parts.push('eFTP: '+th.eftp+'W');
+    if(w.wkg_current) parts.push('W/kg: '+w.wkg_current);
+    if(parts.length) lines.push('<span class="good">Leistungsdaten</span>: '+parts.join(', ')+'. '+
+      (th.p_max?'Pmax: '+th.p_max+'W. ':'')+
+      (w.wkg_block_delta>0?'Aufwärts trendend.':''));
+  }
+
+  // Summary line
+  if(lines.length){
+    var tagHtml=tags.map(function(t){return '<span class="tag '+t.c+'">'+t.t+'</span>';}).join(' ');
+    document.getElementById('assess').innerHTML=
+      (tagHtml?'<div style="margin-bottom:8px">'+tagHtml+'</div>':'')+
+      '<div class="assess">'+lines.map(function(l){return '<p style="margin:6px 0">'+l+'</p>';}).join('')+'</div>';
+  }else{
+    document.getElementById('assess').innerHTML='<div class="neutral">Noch nicht genug Daten für eine Bewertung.</div>';
+  }
+}
+
+function load(){
+  document.getElementById('sync').textContent='⏳ Lade Daten...';
+  document.getElementById('ov').innerHTML='<div class="loading">Lade...</div>';
+  var cached=localStorage.getItem('fd_cache');
+  var cachedTime=parseInt(localStorage.getItem('fd_cache_time')||'0');
+  var now=Date.now();
+
+  // Instant cache display
+  if(cached&&now-cachedTime<600000){
+    try{render(JSON.parse(cached));}catch(e){}
+  }
+
+  // Fetch fresh from GitHub
+  fetchFromGitHub()
+    .then(render)
+    .catch(function(e){
+      if(!cached){
+        document.getElementById('sync').textContent='❌ '+e.message;
+        document.getElementById('ov').innerHTML='<div class="err">Daten konnten nicht geladen werden.<button class="reload" onclick="load()">Erneut versuchen</button></div>';
+      }else{
+        document.getElementById('sync').textContent='⚠️ Offline - Cache Daten';
+      }
+    });
+}
+
+load();
+setInterval(load,300000);
+</script>
+</body>
+</html>
