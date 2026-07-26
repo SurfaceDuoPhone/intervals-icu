@@ -2110,6 +2110,7 @@ class IntervalsSync:
 
     def _fetch_garmin_spo2(self, days: int = 7) -> Dict:
         """Fetch SpO2 (blood oxygen) data from Garmin Connect."""
+        print(f"  Garmin SpO2: GARMIN_BP_AVAILABLE={GARMIN_BP_AVAILABLE}")
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
@@ -2141,6 +2142,7 @@ class IntervalsSync:
 
     def _fetch_garmin_respiration(self, days: int = 7) -> Dict:
         """Fetch respiration data from Garmin Connect."""
+        print(f"  Garmin Respiration: GARMIN_BP_AVAILABLE={GARMIN_BP_AVAILABLE}")
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
