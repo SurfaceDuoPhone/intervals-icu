@@ -2077,8 +2077,8 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "")
-            password = os.environ.get("GARMIN_PASSWORD", "")
+            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
+            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
@@ -2114,8 +2114,8 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "")
-            password = os.environ.get("GARMIN_PASSWORD", "")
+            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
+            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
@@ -2146,8 +2146,8 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "")
-            password = os.environ.get("GARMIN_PASSWORD", "")
+            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
+            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
