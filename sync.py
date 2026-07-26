@@ -2071,8 +2071,11 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            garmin = GarminConnect()
-            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
+            if not email or not password:
+                return {}
+            garmin = GarminConnect(email=email, password=password)
             from datetime import date, timedelta
             end = date.today()
             start = end - timedelta(days=days)
@@ -2104,8 +2107,11 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            garmin = GarminConnect()
-            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
+            if not email or not password:
+                return {}
+            garmin = GarminConnect(email=email, password=password)
             from datetime import date, timedelta
             end = date.today()
             result = {}
@@ -2132,8 +2138,11 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            garmin = GarminConnect()
-            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
+            if not email or not password:
+                return {}
+            garmin = GarminConnect(email=email, password=password)
             from datetime import date, timedelta
             end = date.today()
             result = {}
