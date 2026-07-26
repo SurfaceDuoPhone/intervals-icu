@@ -348,6 +348,13 @@ function generateAssessment(D){
     else {tags.push({t:'ACWR: '+dm.acwr+' Überlastung',c:'tag-bad'});lines.push('<span class="bad">ACWR zu hoch</span> ('+dm.acwr+'). Überlastungsgefahr – Belastung reduzieren!');}
   }
 
+  // Recovery tag
+  if(dm.recovery_index!==undefined){
+    if(dm.recovery_index<=1) tags.push({t:'Recovery: '+dm.recovery_index.toFixed(2)+' ✓',c:'tag-ok'});
+    else if(dm.recovery_index<=1.5) tags.push({t:'Recovery: '+dm.recovery_index.toFixed(2),c:'tag-warn'});
+    else tags.push({t:'Recovery: '+dm.recovery_index.toFixed(2)+'!',c:'tag-bad'});
+  }
+
   // Training polarization
   if(dm.seiler_tid_7d){
     var tid=dm.seiler_tid_7d;
@@ -416,6 +423,14 @@ function generateAssessment(D){
     if(rv>=12&&rv<=20) lines.push('<span class="good">Atemfrequenz normal</span> ('+rv+'/min).');
     else if(rv>20) lines.push('<span class="warn">Atemfrequenz erhöht</span> ('+rv+'/min). Stress oder Anstrengung möglich.');
     else lines.push('<span class="neutral">Atemfrequenz niedrig</span> ('+rv+'/min).');
+  }
+
+  // Recovery
+  if(dm.recovery_index!==undefined){
+    if(dm.recovery_index<=1) lines.push('<span class="good">Erholung optimal</span> (Recovery Index '+dm.recovery_index.toFixed(2)+'). Körper erholt sich gut vom Training.');
+    else if(dm.recovery_index<=1.3) lines.push('<span class="warn">Erholung leicht verzögert</span> (Recovery Index '+dm.recovery_index.toFixed(2)+'). Knapp über Idealwert – Schlaf und Regeneration priorisieren.');
+    else if(dm.recovery_index<=1.8) lines.push('<span class="warn">Erholung mangelhaft</span> (Recovery Index '+dm.recovery_index.toFixed(2)+'). Belastung reduzieren oder Erholungsphasen einplanen.');
+    else lines.push('<span class="bad">Erholung kritisch</span> (Recovery Index '+dm.recovery_index.toFixed(2)+'). Überlastung! Training pausieren und Erholung einplanen.');
   }
 
   // VO2max
