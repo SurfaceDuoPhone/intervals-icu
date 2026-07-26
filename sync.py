@@ -2766,6 +2766,12 @@ class IntervalsSync:
                     "menstrual_phase": latest_wellness.get("menstrualPhase"),
                     "menstrual_phase_predicted": latest_wellness.get("menstrualPhasePredicted"),
                     # Platform
+
+        # === Garmin Blood Pressure overlay ===
+        garmin_bp = self._fetch_garmin_blood_pressure(days=7)
+        if garmin_bp:
+            print(f"  Garmin BP: {len(garmin_bp)} days fetched")
+
                     "readiness": latest_wellness.get("readiness")
                 }
             },
