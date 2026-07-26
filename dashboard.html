@@ -129,8 +129,8 @@ function render(D){
     var _oSpo2=null;if(wd.length){for(var _osi=wd.length-1;_osi>=0;_osi--){if(wd[_osi].spO2){_oSpo2=wd[_osi].spO2;break;}}}
     var ovHtml="";
     if(m.weight_kg) ovHtml+=sr("Gewicht",m.weight_kg+" kg");
-    if(_oRhr) ovHtml+=sr("Ruhepuls",_oRhr+" bpm",_oRhr<=55?"sg":_oRhr<=65?"sw":"sb");
-    if(_oHrv) ovHtml+=sr("HRV",_oHrv+" ms",_oHrv>=40?"sg":_oHrv>=30?"sw":"sb");
+    if(_oRhr) ovHtml+=sr("Ruhepuls",_oRhr+" bpm",_oRhr<=50?"sg":_oRhr<=60?"sg":_oRhr<=70?"sw":"sb");
+    if(_oHrv) ovHtml+=sr("HRV",_oHrv+" ms",_oHrv>=50?"sg":_oHrv>=35?"sg":_oHrv>=25?"sw":"sb");
     if(m.sleep_hours) ovHtml+=sr("Schlaf",m.sleep_formatted||(m.sleep_hours+"h"),m.sleep_hours>=7?"sg":"sw");
     if(_oSpo2) ovHtml+=sr("SpO2",_oSpo2+"%","sg");
     var _oVo2=null;if(wd.length){for(var _ovi=wd.length-1;_ovi>=0;_ovi--){if(wd[_ovi].vo2max){_oVo2=wd[_ovi].vo2max;break;}}}
@@ -227,8 +227,8 @@ function render(D){
         sr('7d Durchschnitt',w.weight_7d_avg_kg?w.weight_7d_avg_kg+' kg':'?')+
         sr('W/kg',w.wkg_current||'?','sg')+
         sr('Trend (28d)',w.weight_28d_slope_kg_per_week?(w.weight_28d_slope_kg_per_week>0?'▲':'▼')+' '+Math.abs(w.weight_28d_slope_kg_per_week).toFixed(2)+' kg/Wo':'?')+
-        sr('HRV',_hrvV?(_hrvV+' ms'):'?','sg')+
-        sr('Ruhepuls',_rhrV?(_rhrV+' bpm'):'?','sg')+
+        sr('HRV',_hrvV?(_hrvV+' ms'):'?',_hrvV>=50?'sg':_hrvV>=35?'sg':_hrvV>=25?'sw':'sb')+
+        sr('Ruhepuls',_rhrV?(_rhrV+' bpm'):'?',_rhrV<=50?'sg':_rhrV<=60?'sg':_rhrV<=70?'sw':'sb')+
         (_bfV?sr('Körperfett',_bfV+'%','sg'):sr('Körperfett','–','neutral'))+
         sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
         sr('Atemfrequenz',_respV?(_respV+'/min'):'?')+
