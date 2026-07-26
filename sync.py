@@ -244,18 +244,12 @@ from collections import defaultdict
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-# Garmin Blood Pressure (optional) - auto-install if missing
+# Garmin Blood Pressure (optional)
 try:
     from garminconnect import Garmin as GarminConnect
     GARMIN_BP_AVAILABLE = True
 except ImportError:
-    try:
-        import subprocess, sys
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "garminconnect>=0.2.0", "-q"])
-        from garminconnect import Garmin as GarminConnect
-        GARMIN_BP_AVAILABLE = True
-    except Exception:
-        GARMIN_BP_AVAILABLE = False
+    GARMIN_BP_AVAILABLE = False
 
 
 class IntervalsSync:
@@ -2077,8 +2071,8 @@ class IntervalsSync:
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
-            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
@@ -2110,12 +2104,11 @@ class IntervalsSync:
 
     def _fetch_garmin_spo2(self, days: int = 7) -> Dict:
         """Fetch SpO2 (blood oxygen) data from Garmin Connect."""
-        print(f"  Garmin SpO2: GARMIN_BP_AVAILABLE={GARMIN_BP_AVAILABLE}")
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
-            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
@@ -2142,12 +2135,11 @@ class IntervalsSync:
 
     def _fetch_garmin_respiration(self, days: int = 7) -> Dict:
         """Fetch respiration data from Garmin Connect."""
-        print(f"  Garmin Respiration: GARMIN_BP_AVAILABLE={GARMIN_BP_AVAILABLE}")
         if not GARMIN_BP_AVAILABLE:
             return {}
         try:
-            email = os.environ.get("GARMIN_EMAIL", "mercury.capri@yahoo.de")
-            password = os.environ.get("GARMIN_PASSWORD", "Altendorf1")
+            email = os.environ.get("GARMIN_EMAIL", "")
+            password = os.environ.get("GARMIN_PASSWORD", "")
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
@@ -2907,6 +2899,43 @@ class IntervalsSync:
             newest_date = max(garmin_resp.keys()) if garmin_resp else None
             if newest_date:
                 data["current_status"]["current_metrics"]["respiration"] = garmin_resp[newest_date].get("avg_waking")
+        # === Preserve Garmin data from previous latest.json when auth fails ===
+        cm = data.get("current_status", {}).get("current_metrics", {})
+        wd = data.get("wellness_data", [])
+        need_preserve = (
+            not cm.get("spO2") and not cm.get("respiration")
+            and not any(w.get("spO2") for w in wd)
+        )
+        if need_preserve:
+            try:
+                prev_path = self.data_dir / "latest.json"
+                if prev_path.exists():
+                    with open(prev_path, "r") as f:
+                        prev = json.load(f)
+                    prev_cm = prev.get("current_status", {}).get("current_metrics", {})
+                    prev_wd = prev.get("wellness_data", [])
+                    if prev_cm.get("spO2") and not cm.get("spO2"):
+                        cm["spO2"] = prev_cm["spO2"]
+                        print(f"  Preserved SpO2 from previous: {prev_cm['spO2']}")
+                    if prev_cm.get("respiration") and not cm.get("respiration"):
+                        cm["respiration"] = prev_cm["respiration"]
+                        print(f"  Preserved Respiration from previous: {prev_cm['respiration']}")
+                    for w in wd:
+                        d_str = w.get("date") or w.get("start")
+                        if d_str and not w.get("spO2"):
+                            for pw in prev_wd:
+                                if (pw.get("date") or pw.get("start")) == d_str and pw.get("spO2"):
+                                    w["spO2"] = pw["spO2"]
+                                    break
+                        if d_str and not w.get("respiration"):
+                            for pw in prev_wd:
+                                if (pw.get("date") or pw.get("start")) == d_str and pw.get("respiration"):
+                                    w["respiration"] = pw["respiration"]
+                                    break
+                    print(f"  Preserved Garmin data from previous latest.json")
+            except Exception as e:
+                print(f"  Could not preserve previous Garmin data: {e}")
+
         return data
 
     def _build_sport_thresholds(self, athlete: dict) -> dict:
