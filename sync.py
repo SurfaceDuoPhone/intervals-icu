@@ -2771,6 +2771,13 @@ class IntervalsSync:
         garmin_bp = self._fetch_garmin_blood_pressure(days=7)
         if garmin_bp:
             print(f"  Garmin BP: {len(garmin_bp)} days fetched")
+            # Overlay Garmin BP onto wellness entries
+            for w_entry in wellness:
+                d_str = w_entry.get("date") or w_entry.get("start")
+                if d_str and d_str in garmin_bp and not w_entry.get("systolic"):
+                    bp = garmin_bp[d_str]
+                    w_entry["systolic"] = bp.get("systolic")
+                    w_entry["diastolic"] = bp.get("diastolic")
 
                     "readiness": latest_wellness.get("readiness")
                 }
