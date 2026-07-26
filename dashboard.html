@@ -120,11 +120,15 @@ function render(D){
     var ws=rpt.workout_summary_stats||{};
 
     // ÜBERSICHT
+    var _oRhr=m.resting_hr;if(!_oRhr&&wd.length){for(var _oi=wd.length-1;_oi>=0;_oi--){if(wd[_oi].resting_hr){_oRhr=wd[_oi].resting_hr;break;}}}
+    var _oHrv=m.hrv;if(!_oHrv&&wd.length){for(var _oji=wd.length-1;_oji>=0;_oji--){if(wd[_oji].hrv_rmssd){_oHrv=wd[_oji].hrv_rmssd;break;}}}
+    var _oSpo2=null;if(wd.length){for(var _osi=wd.length-1;_osi>=0;_osi--){if(wd[_osi].spO2){_oSpo2=wd[_osi].spO2;break;}}}
     var ovHtml="";
     if(m.weight_kg) ovHtml+=sr("Gewicht",m.weight_kg+" kg");
-    if(m.resting_hr) ovHtml+=sr("Ruhepuls",m.resting_hr+" bpm",m.resting_hr<=55?"sg":m.resting_hr<=65?"sw":"sb");
-    if(m.hrv) ovHtml+=sr("HRV",m.hrv+" ms",m.hrv>=40?"sg":m.hrv>=30?"sw":"sb");
+    if(_oRhr) ovHtml+=sr("Ruhepuls",_oRhr+" bpm",_oRhr<=55?"sg":_oRhr<=65?"sw":"sb");
+    if(_oHrv) ovHtml+=sr("HRV",_oHrv+" ms",_oHrv>=40?"sg":_oHrv>=30?"sw":"sb");
     if(m.sleep_hours) ovHtml+=sr("Schlaf",m.sleep_formatted||(m.sleep_hours+"h"),m.sleep_hours>=7?"sg":"sw");
+    if(_oSpo2) ovHtml+=sr("SpO2",_oSpo2+"%","sg");
     if(f.ctl!==undefined) ovHtml+=sr("Fitness (CTL)",f.ctl.toFixed(1),"sg");
     if(f.atl!==undefined) ovHtml+=sr("Load (ATL)",f.atl.toFixed(1),"sw");
     if(f.tsb!==undefined) ovHtml+=sr("Balance (TSB)",f.tsb.toFixed(1),f.tsb>=0?"sg":"sb");
@@ -206,16 +210,21 @@ function render(D){
 
     // KÖRPER
     if(w.weight_latest_kg){
+      var _spo2V=null;for(var _si=wd.length-1;_si>=0;_si--){if(wd[_si].spO2){_spo2V=wd[_si].spO2;break;}}
+      var _respV=null;for(var _ri=wd.length-1;_ri>=0;_ri--){if(wd[_ri].respiration){_respV=wd[_ri].respiration;break;}}
+      var _rhrV=m.resting_hr||null;if(!_rhrV){for(var _ri2=wd.length-1;_ri2>=0;_ri2--){if(wd[_ri2].resting_hr){_rhrV=wd[_ri2].resting_hr;break;}}}
+      var _hrvV=m.hrv||null;if(!_hrvV){for(var _ri3=wd.length-1;_ri3>=0;_ri3--){if(wd[_ri3].hrv_rmssd){_hrvV=wd[_ri3].hrv_rmssd;break;}}}
+      var _bfV=m.body_fat_pct||null;if(!_bfV){for(var _ri4=wd.length-1;_ri4>=0;_ri4--){if(wd[_ri4].body_fat_pct){_bfV=wd[_ri4].body_fat_pct;break;}}}
       document.getElementById('bod').innerHTML=
         sr('Gewicht',w.weight_latest_kg+' kg')+
         sr('7d Durchschnitt',w.weight_7d_avg_kg?w.weight_7d_avg_kg+' kg':'?')+
         sr('W/kg',w.wkg_current||'?','sg')+
         sr('Trend (28d)',w.weight_28d_slope_kg_per_week?(w.weight_28d_slope_kg_per_week>0?'▲':'▼')+' '+Math.abs(w.weight_28d_slope_kg_per_week).toFixed(2)+' kg/Wo':'?')+
-        sr('HRV',m.hrv||'?','sg')+
-        sr('Ruhepuls',m.resting_hr||'?','sg')+
-        (m.body_fat_pct?sr('Körperfett',m.body_fat_pct+'%','sg'):'')+
-        var _spo2V=null;for(var _si=wd.length-1;_si>=0;_si--){if(wd[_si].spO2){_spo2V=wd[_si].spO2;break;}}sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
-        var _respV=null;for(var _ri=wd.length-1;_ri>=0;_ri--){if(wd[_ri].respiration){_respV=wd[_ri].respiration;break;}}sr('Atemfrequenz',_respV?(_respV+'/min'):'?');
+        sr('HRV',_hrvV?(_hrvV+' ms'):'?','sg')+
+        sr('Ruhepuls',_rhrV?(_rhrV+' bpm'):'?','sg')+
+        (_bfV?sr('Körperfett',_bfV+'%','sg'):sr('Körperfett','–','neutral'))+
+        sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
+        sr('Atemfrequenz',_respV?(_respV+'/min'):'?');
     }
 
     // GEWICHTSCHART
@@ -402,11 +411,12 @@ function generateAssessment(D){
   }
 
   // Resting HR
-  if(m.resting_hr){
-    if(m.resting_hr<=50) lines.push('<span class="good">Exzellenter Ruhepuls</span> ('+m.resting_hr+' bpm). Zeichen hoher kardiovaskulärer Fitness.');
-    else if(m.resting_hr<=60) lines.push('<span class="good">Guter Ruhepuls</span> ('+m.resting_hr+' bpm). Gesunder Bereich.');
-    else if(m.resting_hr<=70) lines.push('<span class="neutral">Ruhepuls durchschnittlich</span> ('+m.resting_hr+' bpm).');
-    else lines.push('<span class="warn">Ruhepuls erhöht</span> ('+m.resting_hr+' bpm). Kann auf Stress, Übertraining oder Konditionsverlust hindeuten.');
+  var _aRhr=m.resting_hr||null;if(!_aRhr){for(var _ari=wd.length-1;_ari>=0;_ari--){if(wd[_ari].resting_hr){_aRhr=wd[_ari].resting_hr;break;}}}
+  if(_aRhr){
+    if(_aRhr<=50) lines.push('<span class="good">Exzellenter Ruhepuls</span> ('+_aRhr+' bpm). Zeichen hoher kardiovaskulärer Fitness.');
+    else if(_aRhr<=60) lines.push('<span class="good">Guter Ruhepuls</span> ('+_aRhr+' bpm). Gesunder Bereich.');
+    else if(_aRhr<=70) lines.push('<span class="neutral">Ruhepuls durchschnittlich</span> ('+_aRhr+' bpm).');
+    else lines.push('<span class="warn">Ruhepuls erhöht</span> ('+_aRhr+' bpm). Kann auf Stress, Übertraining oder Konditionsverlust hindeuten.');
   }
 
   // Sport-specific: FTP / eFTP
