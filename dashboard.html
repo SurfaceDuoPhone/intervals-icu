@@ -134,7 +134,7 @@ function render(D){
     if(m.sleep_hours) ovHtml+=sr("Schlaf",m.sleep_formatted||(m.sleep_hours+"h"),m.sleep_hours>=7?"sg":"sw");
     if(_oSpo2) ovHtml+=sr("SpO2",_oSpo2+"%","sg");
     var _oVo2=null;if(wd.length){for(var _ovi=wd.length-1;_ovi>=0;_ovi--){if(wd[_ovi].vo2max){_oVo2=wd[_ovi].vo2max;break;}}}
-    if(_oVo2) ovHtml+=sr("VO2max",_oVo2+" ml/kg/min",_oVo2>=50?"sg":_oVo2>=40?"sw":"sb");
+    if(_oVo2) ovHtml+=sr("VO2max",_oVo2+" ml/kg/min",_oVo2>=45?"sg":_oVo2>=40?"sw":"sb");
     if(f.ctl!==undefined) ovHtml+=sr("Fitness (CTL)",f.ctl.toFixed(1),"sg");
     if(f.atl!==undefined) ovHtml+=sr("Load (ATL)",f.atl.toFixed(1),"sw");
     if(f.tsb!==undefined) ovHtml+=sr("Balance (TSB)",f.tsb.toFixed(1),f.tsb>=0?"sg":"sb");
@@ -232,7 +232,7 @@ function render(D){
         (_bfV?sr('Körperfett',_bfV+'%','sg'):sr('Körperfett','–','neutral'))+
         sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
         sr('Atemfrequenz',_respV?(_respV+'/min'):'?')+
-        (_vo2V?sr('VO2max',_vo2V+' ml/kg/min',_vo2V>=50?'sg':_vo2V>=40?'sw':'sb'):sr('VO2max','–','neutral'));
+        (_vo2V?sr('VO2max',_vo2V+' ml/kg/min',_vo2V>=45?'sg':_vo2V>=40?'sw':'sb'):sr('VO2max','–','neutral'));
     }
 
     // GEWICHTSCHART
