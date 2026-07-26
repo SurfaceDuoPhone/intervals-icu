@@ -244,6 +244,13 @@ from collections import defaultdict
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
+# Garmin Blood Pressure (optional)
+try:
+    from garminconnect import Garmin as GarminConnect
+    GARMIN_BP_AVAILABLE = True
+except ImportError:
+    GARMIN_BP_AVAILABLE = False
+
 
 class IntervalsSync:
     """Sync Intervals.icu data to GitHub repository or local file"""
@@ -2058,6 +2065,39 @@ class IntervalsSync:
         
         return segments
     
+
+    def _fetch_garmin_blood_pressure(self, days: int = 7) -> Dict:
+        """Fetch blood pressure from Garmin Connect."""
+        if not GARMIN_BP_AVAILABLE:
+            return {}
+        try:
+            garmin = GarminConnect()
+            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            from datetime import date, timedelta
+            end = date.today()
+            start = end - timedelta(days=days)
+            bp_data = garmin.get_blood_pressure(start.isoformat(), end.isoformat())
+            result = {}
+            if isinstance(bp_data, dict) and "measurementSummaries" in bp_data:
+                for s in bp_data["measurementSummaries"]:
+                    d = s.get("startDate", "")
+                    if not d:
+                        continue
+                    measurements = s.get("measurements", [])
+                    if measurements:
+                        sys_vals = [v["systolic"] for v in measurements if v.get("systolic")]
+                        dia_vals = [v["diastolic"] for v in measurements if v.get("diastolic")]
+                        pulse_vals = [v["pulse"] for v in measurements if v.get("pulse")]
+                        result[d] = {
+                            "systolic": round(sum(sys_vals)/len(sys_vals)) if sys_vals else None,
+                            "diastolic": round(sum(dia_vals)/len(dia_vals)) if dia_vals else None,
+                            "pulse": round(sum(pulse_vals)/len(pulse_vals)) if pulse_vals else None,
+                        }
+            return result
+        except Exception as e:
+            print(f"  Garmin BP error: {e}")
+            return {}
+
     def _fetch_today_wellness(self) -> Dict:
         """
         Fetch today's wellness data which contains:
@@ -2707,8 +2747,8 @@ class IntervalsSync:
                     # Vitals
                     "spO2": latest_wellness.get("spO2"),
                     "blood_glucose": latest_wellness.get("bloodGlucose"),
-                    "systolic": latest_wellness.get("systolic"),
-                    "diastolic": latest_wellness.get("diastolic"),
+                    "systolic": (garmin_bp.get(newest, {}).get("systolic") or latest_wellness.get("systolic")) if garmin_bp else latest_wellness.get("systolic"),
+                    "diastolic": (garmin_bp.get(newest, {}).get("diastolic") or latest_wellness.get("diastolic")) if garmin_bp else latest_wellness.get("diastolic"),
                     "baevsky_si": latest_wellness.get("baevskySI"),
                     "lactate": latest_wellness.get("lactate"),
                     "respiration": latest_wellness.get("respiration"),
