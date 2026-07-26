@@ -2098,6 +2098,63 @@ class IntervalsSync:
             print(f"  Garmin BP error: {e}")
             return {}
 
+
+    def _fetch_garmin_spo2(self, days: int = 7) -> Dict:
+        """Fetch SpO2 (blood oxygen) data from Garmin Connect."""
+        if not GARMIN_BP_AVAILABLE:
+            return {}
+        try:
+            garmin = GarminConnect()
+            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            from datetime import date, timedelta
+            end = date.today()
+            result = {}
+            for i in range(days):
+                d = end - timedelta(days=i)
+                ds = d.isoformat()
+                try:
+                    spo2 = garmin.get_spo2_data(ds)
+                    if isinstance(spo2, dict) and spo2.get("averageSpO2"):
+                        result[ds] = {
+                            "average_spO2": spo2.get("averageSpO2"),
+                            "lowest_spO2": spo2.get("lowestSpO2"),
+                            "sleep_spO2": spo2.get("avgSleepSpO2"),
+                        }
+                except Exception:
+                    pass
+            return result
+        except Exception as e:
+            print(f"  Garmin SpO2 error: {e}")
+            return {}
+
+    def _fetch_garmin_respiration(self, days: int = 7) -> Dict:
+        """Fetch respiration data from Garmin Connect."""
+        if not GARMIN_BP_AVAILABLE:
+            return {}
+        try:
+            garmin = GarminConnect()
+            garmin.login(tokenstore=os.path.expanduser("~/.garmin_tokens"))
+            from datetime import date, timedelta
+            end = date.today()
+            result = {}
+            for i in range(days):
+                d = end - timedelta(days=i)
+                ds = d.isoformat()
+                try:
+                    resp = garmin.get_respiration_data(ds)
+                    if isinstance(resp, dict) and resp.get("avgWakingRespirationValue"):
+                        result[ds] = {
+                            "avg_waking": resp.get("avgWakingRespirationValue"),
+                            "avg_sleep": resp.get("avgSleepRespirationValue"),
+                            "lowest": resp.get("lowestRespirationValue"),
+                            "highest": resp.get("highestRespirationValue"),
+                        }
+                except Exception:
+                    pass
+            return result
+        except Exception as e:
+            print(f"  Garmin Respiration error: {e}")
+            return {}
     def _fetch_today_wellness(self) -> Dict:
         """
         Fetch today's wellness data which contains:
@@ -2809,6 +2866,30 @@ class IntervalsSync:
                 data["current_status"]["current_metrics"]["systolic"] = bp.get("systolic")
                 data["current_status"]["current_metrics"]["diastolic"] = bp.get("diastolic")
 
+
+        # === Garmin SpO2 overlay ===
+        garmin_spo2 = self._fetch_garmin_spo2(days=7)
+        if garmin_spo2:
+            print(f"  Garmin SpO2: {len(garmin_spo2)} days fetched")
+            for w_entry in wellness:
+                d_str = w_entry.get("date") or w_entry.get("start")
+                if d_str and d_str in garmin_spo2 and not w_entry.get("spO2"):
+                    w_entry["spO2"] = garmin_spo2[d_str].get("average_spO2")
+            newest_date = max(garmin_spo2.keys()) if garmin_spo2 else None
+            if newest_date:
+                data["current_status"]["current_metrics"]["spO2"] = garmin_spo2[newest_date].get("average_spO2")
+
+        # === Garmin Respiration overlay ===
+        garmin_resp = self._fetch_garmin_respiration(days=7)
+        if garmin_resp:
+            print(f"  Garmin Respiration: {len(garmin_resp)} days fetched")
+            for w_entry in wellness:
+                d_str = w_entry.get("date") or w_entry.get("start")
+                if d_str and d_str in garmin_resp and not w_entry.get("respiration"):
+                    w_entry["respiration"] = garmin_resp[d_str].get("avg_waking")
+            newest_date = max(garmin_resp.keys()) if garmin_resp else None
+            if newest_date:
+                data["current_status"]["current_metrics"]["respiration"] = garmin_resp[newest_date].get("avg_waking")
         return data
 
     def _build_sport_thresholds(self, athlete: dict) -> dict:
