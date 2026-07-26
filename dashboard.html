@@ -214,8 +214,8 @@ function render(D){
         sr('HRV',m.hrv||'?','sg')+
         sr('Ruhepuls',m.resting_hr||'?','sg')+
         (m.body_fat_pct?sr('Körperfett',m.body_fat_pct+'%','sg'):'')+
-        sr('SpO2',wd.length&&wd[wd.length-1].spO2?(wd[wd.length-1].spO2+'%'):'?')+
-        sr('Atemfrequenz',wd.length&&wd[wd.length-1].respiration?(wd[wd.length-1].respiration+'/min'):'?');
+        var _spo2V=null;for(var _si=wd.length-1;_si>=0;_si--){if(wd[_si].spO2){_spo2V=wd[_si].spO2;break;}}sr('SpO2',_spo2V?(_spo2V+'%'):'?')+
+        var _respV=null;for(var _ri=wd.length-1;_ri>=0;_ri--){if(wd[_ri].respiration){_respV=wd[_ri].respiration;break;}}sr('Atemfrequenz',_respV?(_respV+'/min'):'?');
     }
 
     // GEWICHTSCHART
@@ -228,11 +228,15 @@ function render(D){
     }
 
     // TRAINING
-    if(ws.total_training_formatted||f.ctl!==undefined){
+    var wsum=rpt.weekly_summary||{};
+    var wsTC=wsum.total_training_formatted||ws.total_training_formatted||'';
+    var wsTSS=wsum.total_tss||ws.total_tss||0;
+    var wsAC=wsum.activities_count||ws.activities_count||0;
+    if(wsTC||f.ctl!==undefined){
       var tid=dm.seiler_tid_7d||{};
       document.getElementById('trn').innerHTML=
-        sr('Gesamt',ws.total_training_formatted?(ws.total_training_formatted+' | '+ws.total_tss+' TSS'):(f.ctl?((f.ctl).toFixed(0)+' CTL'):'?'))+
-        sr('Aktivitäten',ws.activities_count?ws.activities_count+'×':'?')+
+        sr('Gesamt',wsTC?(wsTC+' | '+wsTSS+' TSS'):(f.ctl?((f.ctl).toFixed(0)+' CTL'):'?'))+
+        sr('Aktivitäten',wsAC?wsAC+'×':'?')+
         sr('Z1 (Easy)',(tid.z1_pct||0).toFixed(0)+'%','sg')+
         sr('Z3 (Hard)',(tid.z3_pct||0).toFixed(0)+'%')+
         sr('Polarisation',tid.classification||'?','sg')+
@@ -252,6 +256,29 @@ function render(D){
         sr('Pmax',th.p_max? th.p_max+' W':'?')+
         sr('W/kg',w.wkg_current? w.wkg_current:'?','sg')+
         sr('LTHR',sp.lthr? sp.lthr+' bpm':'?');
+    }
+
+    // LETZTE AKTIVITAETEN
+    var acts=rpt.recent_activities||[];
+    var typeMap={'Ride':'🚴 Radfahrt','Run':'🏃 Laufen','VirtualRide':'🚴 Radtraining','EBikeRide':'⚡ E-Bike','Hike':'🥾 Wandern','WeightTraining':'💪 Krafttraining','Workout':'🏋️ Training','Swim':'🏊 Schwimmen','Walk':'🚶 Spazieren','AlpineSki':'⛷️ Skifahren','GravelRide':'🚴 Gravel','MountainBike':'🚵 MTB'};
+    if(acts.length){
+      var ah='<div style="font-size:12px">';
+      acts.slice(0,15).forEach(function(a){
+        var icon=typeMap[a.type]||('🏃 '+a.type);
+        var dist=a.distance_km?((a.distance_km<10?a.distance_km.toFixed(1):Math.round(a.distance_km))+' km'):'';
+        var dur=a.duration_hours?((a.duration_hours*60).toFixed(0)+' min'):'';
+        var pwr=a.avg_power?(' | ⚡'+a.avg_power+'W'):'';
+        var hr=a.avg_hr?(' | ❤️'+a.avg_hr):'';
+        var dt=(a.date||'').slice(5,10);
+        ah+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">';
+        ah+='<div><span style="color:var(--accent)">'+icon+'</span> '+(a.name||'')+'</div>';
+        ah+='<div style="color:var(--muted);font-size:11px;white-space:nowrap">'+dt+(dist?' · '+dist:'')+(dur?' · '+dur:'')+pwr+hr+'</div>';
+        ah+='</div>';
+      });
+      ah+='</div>';
+      document.getElementById('acts').innerHTML=ah;
+    }else{
+      document.getElementById('acts').innerHTML='<div class="err">Keine Aktivitäten gefunden</div>';
     }
 
     var ver=(rpt.metadata||{}).version||'?';
