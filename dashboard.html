@@ -10,7 +10,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="version" content="2.1">
 <link rel="manifest" href="manifest.json">
-<title>Fitness Dashboard</title>
+<title>Fitness Dashboard v2.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -300,7 +300,7 @@ function render(D){
 
     var ver=(rpt.metadata||{}).version||'?';
     var upd=(rpt.metadata||{}).last_updated||'';
-    document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v'+ver+(upd?' | '+upd.slice(5,16):'');
+    document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v2.2'+(upd?' | '+upd.slice(5,16):'');
     localStorage.setItem('fd_cache',JSON.stringify(D));
     generateAssessment(D);
     localStorage.setItem('fd_cache_time',String(Date.now()));
