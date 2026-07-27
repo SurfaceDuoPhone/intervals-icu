@@ -1,5 +1,4 @@
-const CACHE_NAME = 'fd-v2';
-const urlsToCache = ['./dashboard.html'];
+const CACHE_NAME = 'fd-v3';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -14,11 +13,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request).then(response => {
-      const clone = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-      return response;
-    }).catch(() => caches.match(event.request))
-  );
+  if (event.request.url.includes('github.io')) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+  }
 });
