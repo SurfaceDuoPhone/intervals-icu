@@ -9,7 +9,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="manifest" href="coach-manifest.json">
-<title>Fitness Coach v1.1</title>
+<title>Fitness Coach v1.2</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -57,6 +57,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div id="recBox"></div>
 <div class="card"><h2>📅 Empfehlung für morgen</h2><div id="tmrw"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🗓️ Plan nächste 7–10 Tage</h2><div id="plan"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🎯 Zonen (HF / Watt)</h2><div id="zones"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📡 Vital-Signale</h2><div id="signals"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📝 Notizen</h2><div id="notes"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>⚠️ Alerts</h2><div id="alerts"><div class="loading">Lade...</div></div></div>
@@ -312,6 +313,33 @@ function render(D){
     buildTomorrow(rec, rd, dm, cm, f)+'</div>';
   document.getElementById('plan').innerHTML=buildPlan(rec, rd, dm, cm, f, rpt.weekly_summary);
 
+  // ==== Zonen (HF / Watt) ====
+  var csZ=rpt.current_status||{};
+  var zSports=(csZ.thresholds&&csZ.thresholds.sports)||{};
+  var zSrc=zSports.cycling||zSports.run||null;
+  var zInfo=zSrc&&zSrc.zones||null;
+  var zList=zInfo&&zInfo.zones||[];
+  if(zList.length){
+    var zh=zList.slice(0,3).map(function(z){
+      var hr='–';
+      if(z.hr_max!==undefined&&z.hr_max!==null) hr=((z.hr_min===null||z.hr_min===undefined)?'<':z.hr_min+'–')+z.hr_max+' bpm';
+      var pw='–';
+      var w=z.power;
+      if(w&&w.w_max!==undefined&&w.w_max!==null){
+        if(w.pct_max>=900) pw='>'+Math.max(0,w.w_min-1)+' W';
+        else if(w.w_min===null||w.w_min===undefined) pw='<'+w.w_max+' W';
+        else pw=w.w_min+'–'+w.w_max+' W';
+      }
+      return '<div class="sig"><span class="name">'+z.zone+' · '+(z.name||'')+'</span>'+
+        '<span class="delta">'+hr+'</span>'+
+        '<span class="val">'+(pw!=='–'?'⚡ '+pw:'–')+'</span></div>';
+    }).join('')+
+    (zInfo.ftp_basis?'<div class="note" style="text-align:center;color:var(--muted);font-size:11px">Wattbasis: FTP '+zInfo.ftp_basis+' W</div>':'');
+    document.getElementById('zones').innerHTML=zh;
+  }else{
+    document.getElementById('zones').innerHTML='<div class="err">Keine Zonendaten</div>';
+  }
+
   // ==== Signals ====
   var sigHtml="";
   // HRV
@@ -359,7 +387,7 @@ function render(D){
 
   // Sync header
   var upd=(rpt.metadata||{}).last_updated||"";
-  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.1"+(upd?" | Daten: "+upd.slice(0,16):"");
+  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.2"+(upd?" | Daten: "+upd.slice(0,16):"");
   localStorage.setItem('coach_cache',JSON.stringify(D));
   localStorage.setItem('coach_cache_time',String(Date.now()));
 }
