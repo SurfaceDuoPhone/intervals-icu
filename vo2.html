@@ -49,6 +49,15 @@ tr.cur td{color:var(--green);font-weight:600}
 .loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 .err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
 .reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.btn{display:inline-block;margin:6px 4px 2px 0;padding:9px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.btn.g{background:var(--green);color:#0f0f23}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.tbl th,.tbl td{padding:5px 6px;text-align:left;border-bottom:1px solid var(--border)}
+.tbl th{color:var(--muted);font-weight:600;font-size:11px}
+.tbl tr.q td{color:var(--green)}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.tag-q{background:#00e67622;color:var(--green)}
+.tag-n{background:#2a2a4a;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -60,7 +69,9 @@ tr.cur td{color:var(--green);font-weight:600}
 <div class="card"><h2>📊 Aktueller Wert</h2><div id="cur"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📈 Trend &amp; Statistik</h2><div id="stats"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🗺️ Verlauf (90 Tage)</h2><div id="chart"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🏋️ Training &amp; VO2max</h2><div id="tcmp"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🎚️ Einordnung (Männer 60–69)</h2><div id="ref"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📤 Export</h2><div id="exp"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📝 Hinweise</h2><div id="notes"><div class="loading">Lade...</div></div></div>
 </div>
 <div class="nav">
@@ -87,6 +98,14 @@ function sr(l,v,c){
 
 function round1(x){return Math.round(x*10)/10;}
 
+var LAST_D=null;
+var TYPE_ICON={'Ride':'🚴','VirtualRide':'🚴','GravelRide':'🚴','MountainBikeRide':'🚵','Run':'🏃','VirtualRun':'🏃','TrailRun':'🥾','Swim':'🏊','Walk':'🚶','Hike':'🥾','WeightTraining':'💪','Workout':'🏋️','AlpineSki':'⛷️','EBikeRide':'⚡'};
+function isQuality(a){
+  if(a.intensity_factor!==null&&a.intensity_factor!==undefined&&a.intensity_factor>=0.85) return true;
+  var n=(a.name||'').toLowerCase();
+  return /vo2|intervall|tempo|interval/.test(n);
+}
+
 function lineChart(values){
   var W=300,H=120,PAD=8;
   var min=Math.min.apply(null,values),max=Math.max.apply(null,values);
@@ -110,6 +129,75 @@ function lineChart(values){
     '<div class="axis"><span>'+values[0].toFixed(0)+'</span><span>'+round1(min)+' – '+round1(max)+' ml/kg/min</span><span>'+values[values.length-1].toFixed(0)+'</span></div>';
 }
 
+function renderTraining(D){
+  var rpt=D||{};
+  var dm=rpt.derived_metrics||{};
+  var acts=rpt.recent_activities||[];
+  var vh=rpt.vo2max_history||[];
+  var el=document.getElementById('tcmp');
+  if(!acts.length){ el.innerHTML='<div class="err">Keine Aktivitäten vorhanden</div>'; return; }
+  var now=new Date(); now.setHours(0,0,0,0);
+  var d30=new Date(now); d30.setDate(d30.getDate()-29);
+  var recent=acts.filter(function(a){ var dt=new Date((a.date||'').slice(0,10)+'T00:00:00'); return !isNaN(dt)&&dt>=d30; });
+  var qual=recent.filter(isQuality);
+  var tss28=dm.tss_28d_total;
+  var tss7=dm.tss_7d_total;
+  var easy=dm.easy_time_ratio;
+  var hardW=dm.hard_days_this_week;
+  var rows=acts.slice(0,15).map(function(a){
+    var q=isQuality(a);
+    var dt=(a.date||'').slice(5,10);
+    var dur=a.duration_hours?((a.duration_hours*60).toFixed(0)+' min'):'';
+    var tss=a.tss?('TSS '+a.tss):'';
+    return '<tr class="'+(q?'q':'')+'"><td style="white-space:nowrap">'+dt+'</td><td>'+(TYPE_ICON[a.type]||'🏃')+' '+(a.name||a.type||'')+'</td><td>'+dur+'</td><td>'+tss+'</td><td>'+((a.intensity_factor||0)>=0.85?'<span class="tag tag-q">IF '+(a.intensity_factor/100).toFixed(2)+'</span>':'')+'</td></tr>';
+  }).join('');
+  var trend='';
+  if(vh.length>=2){
+    var dV=vh[vh.length-1].vo2max-vh[0].vo2max;
+    trend=dV>0?'📈 Dein VO2max steigt (+'+round1(dV)+' in 90 Tagen) – die Kombination aus Grundlagen- und Qualitätstraining trägt Früchte. Weiter so!':
+          dV<0?'📉 Dein VO2max sinkt ('+round1(dV)+' in 90 Tagen) – prüfe, ob ausreichend Qualitätsreize und Erholung im Plan sind.':
+          '➡️ Dein VO2max ist stabil – für Zuwächse Qualitätsreize gezielt steigern.';
+  }
+  var qTxt=qual.length>=8?'Sehr gute Anzahl an Qualitätsreizen ('+qual.length+' in 30 Tagen) – das treibt den VO2max.':
+           qual.length>=4?'Gute Anzahl an Qualitätsreizen ('+qual.length+' in 30 Tagen) – solide Basis für VO2max-Zuwächse.':
+           'Nur '+qual.length+' Qualitätsreize in 30 Tagen – für VO2max-Zuwächse 2× pro Woche einplanen (4×4/5×5).';
+  var eTxt=(easy!==null&&easy!==undefined&&easy>=0.75)?'✅ Easy-Anteil '+(easy*100).toFixed(0)+' % – ideale Grundlagen-Basis.':'⚠️ Easy-Anteil '+(easy!==null&&easy!==undefined?(easy*100).toFixed(0)+' %':'?')+' – etwas mehr Grundlagenausdauer einplanen.';
+  el.innerHTML=
+    sr('Aktivitäten (30 Tage)',recent.length+'×')+
+    sr('Qualitätsreize (30 Tage)',qual.length+'×','sg')+
+    sr('TSS 7 Tage',tss7!==null&&tss7!==undefined?tss7:'?')+
+    sr('TSS 28 Tage',tss28!==null&&tss28!==undefined?tss28:'?')+
+    sr('Harte Tage (diese Woche)',hardW!==null&&hardW!==undefined?hardW:'?')+
+    '<div class="note">'+trend+'<br>'+qTxt+'<br>'+eTxt+'</div>'+
+    '<div style="margin-top:8px;font-size:11px;color:var(--muted)">Letzte 15 Einheiten (grün = Qualitätsreiz, IF ≥ 0,85):</div>'+
+    '<table class="tbl"><tr><th>Datum</th><th>Einheit</th><th>Dauer</th><th>Belastung</th><th>Intensität</th></tr>'+rows+'</table>';
+}
+
+function csvDownload(filename, header, rows){
+  var csv=header.join(';')+'\n'+rows.map(function(r){return r.map(function(c){return '"'+String(c===null||c===undefined?'':c).replace(/"/g,'""')+'"';}).join(';');}).join('\n');
+  var blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);
+}
+function exportVo2(){
+  var D=LAST_D||{};
+  var vh=D.vo2max_history||[];
+  if(!vh.length){ alert('Keine VO2max-Daten zum Exportieren vorhanden.'); return; }
+  csvDownload('vo2max_verlauf.csv',['Datum','VO2max_ml_kg_min'],vh.map(function(x){return [x.date,x.vo2max];}));
+}
+function exportTrain(){
+  var D=LAST_D||{};
+  var acts=D.recent_activities||[];
+  if(!acts.length){ alert('Keine Aktivitäten zum Exportieren vorhanden.'); return; }
+  csvDownload('training.csv',['Datum','Typ','Name','Dauer_h','Distanz_km','TSS','IF','Avg_HR'],acts.map(function(a){
+    return [a.date,a.type,a.name||'',a.duration_hours||'',a.distance_km||'',a.tss||'',((a.intensity_factor||0)/100).toFixed(2),a.avg_hr||''];
+  }));
+}
+
 function render(D){
   var rpt=D||{};
   var ap=rpt.athlete_profile||{};
@@ -117,6 +205,7 @@ function render(D){
   var vo2Now=(th.vo2max||null);
   var vh=rpt.vo2max_history||[];
   var upd=(rpt.metadata||{}).last_updated||"";
+  LAST_D=D;
 
   if(!vo2Now&&vh.length) vo2Now=vh[vh.length-1].vo2max;
 
@@ -186,6 +275,12 @@ function render(D){
     '• Mit zunehmendem Alter sinkt VO2max natürlicherweise (~0,5 %/Jahr); der Verlauf zählt mehr als der Einzelwert.<br>'+
     '• Gemessene Werte kommen aus deinen Aktivitäten/Wellness-Daten (Garmin/Intervals.icu) und aktualisieren sich mit jedem Sync.'+
     '</div>';
+
+  renderTraining(D);
+  document.getElementById('exp').innerHTML='<div class="note">Download als CSV (Excel-kompatibel, UTF-8):</div>'+
+    '<button class="btn g" onclick="exportVo2()">⬇️ VO2max-Verlauf</button>'+
+    '<button class="btn" onclick="exportTrain()">⬇️ Training (alle)</button>'+
+    '<div class="note" style="margin-top:6px">Training enthält die zuletzt gelieferten Aktivitäten aus latest.json.</div>';
 
   document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+(upd?' | Daten: '+upd.slice(0,16):'');
   localStorage.setItem('vo2_cache',JSON.stringify(D));
