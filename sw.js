@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fd-v3';
+const CACHE_NAME = 'fd-v4';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -13,11 +13,14 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (event.request.url.includes('github.io')) {
+  if (event.request.url.includes('github.io') && event.request.method === 'GET') {
     event.respondWith(
       fetch(event.request).then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        // Only cache successful responses (never cache 404s/errors)
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
         return response;
       }).catch(() => caches.match(event.request))
     );

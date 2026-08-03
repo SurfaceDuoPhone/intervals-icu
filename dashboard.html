@@ -10,7 +10,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="version" content="2.1">
 <link rel="manifest" href="manifest.json">
-<title>Fitness Dashboard v2.3</title>
+<title>Fitness Dashboard v2.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -62,6 +62,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="container">
 <div class="sec on" id="s-overview">
 <div class="card"><h2>📊 Übersicht</h2><div id="ov"><div class="loading">Lade...</div></div></div>
+<div class="card" onclick="location.href='coach.html'" style="cursor:pointer;border-left:4px solid var(--yellow)">
+<h2>🧠 Fitness Coach</h2>
+<div style="font-size:12px;color:var(--muted)">Trainings- &amp; Erholungsempfehlung auf Basis der aktuellen Daten</div>
+<div style="margin-top:8px;text-align:center"><span style="display:inline-block;padding:6px 16px;background:var(--accent);color:#fff;border-radius:8px;font-size:12px">Jetzt Empfehlung ansehen →</span></div>
+</div>
 <div class="card"><h2>🩺 Blutdruck</h2><div id="bp"><div class="loading">Lade...</div></div><div class="chart" id="bpC"></div></div>
 <div class="card"><h2>📋 Fitness Report</h2><div id="rpt"><div class="loading">Lade Report...</div></div></div>
 <div class="card"><h2>📝 Bewertung</h2><div id="assess"><div class="loading">Analysiere...</div></div></div>
@@ -301,7 +306,7 @@ function render(D){
 
     var ver=(rpt.metadata||{}).version||'?';
     var upd=(rpt.metadata||{}).last_updated||'';
-    document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v2.3'+(upd?' | '+upd.slice(5,16):'');
+    document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v2.4'+(upd?' | '+upd.slice(5,16):'');
     localStorage.setItem('fd_cache',JSON.stringify(D));
     generateAssessment(D);
     localStorage.setItem('fd_cache_time',String(Date.now()));
