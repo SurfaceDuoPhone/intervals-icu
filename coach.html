@@ -9,7 +9,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="manifest" href="coach-manifest.json">
-<title>Fitness Coach v1.2</title>
+<title>Fitness Coach v1.3</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -58,6 +58,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="card"><h2>📅 Empfehlung für morgen</h2><div id="tmrw"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🗓️ Plan nächste 7–10 Tage</h2><div id="plan"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🎯 Zonen (HF / Watt)</h2><div id="zones"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>❤️ VO2max verbessern</h2><div id="vo2"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📡 Vital-Signale</h2><div id="signals"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📝 Notizen</h2><div id="notes"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>⚠️ Alerts</h2><div id="alerts"><div class="loading">Lade...</div></div></div>
@@ -227,6 +228,34 @@ function buildPlan(rec, rd, dm, cm, f, wk){
   return rows.join('')+'<div class="note" style="margin-top:8px">'+note.join('<br>')+'</div>';
 }
 
+function buildVo2(rd, dm, cm, f, ap, th, zList){
+  var vo2=(th&&th.vo2max)||(cm&&cm.vo2max)||null;
+  if(vo2===null||vo2===undefined) return null;
+  var z5=null;
+  for(var zi=0;zi<(zList||[]).length;zi++){ if(zList[zi].zone==='Z5'){ z5=zList[zi]; break; } }
+  var hr5=z5&&z5.hr_max!==null&&z5.hr_max!==undefined?(z5.hr_min+'–'+z5.hr_max+' bpm'):'~90–95 % HFmax';
+  var w5=z5&&z5.power&&z5.power.w_max!==null&&z5.power.w_max!==undefined?(z5.power.w_min+'–'+z5.power.w_max+' W'):null;
+  var sig=rd.signals||{};
+  var hrv=sig.hrv&&sig.hrv.status;
+  var rhr=sig.rhr&&sig.rhr.status;
+  var sleepH=(sig.sleep&&sig.sleep.hours)||cm.sleep_hours;
+  var acwr=dm.acwr;
+  var tired=(hrv==='amber'||hrv==='red'||rhr==='red'||(acwr!==null&&acwr!==undefined&&acwr>=1.3));
+  var tips=[];
+  tips.push('⚡ <b>2× pro Woche VO2max-Intervalle:</b> z. B. 4×4 min bei ~90–95 % HFmax (= deine Z5: '+hr5+') mit 3–4 min lockerer Pause. Der wissenschaftlich beste Reiz.');
+  if(w5) tips.push('🚴 Am Rad: 5×3 min bei maximaler, gleichmäßiger Leistung (Z5 = '+w5+').');
+  if(tired) tips.push('⚠️ <b>Heute/aktuell kein Intervall:</b> HRV bzw. Ruhepuls zeigen erhöhte Ermüdung. Erst wieder, wenn HRV über Baseline und Ruhepuls normal sind.');
+  if(sleepH!==null&&sleepH!==undefined&&sleepH<7) tips.push('😴 Schlaf (aktuell '+round1(sleepH)+' h): Intervalle nur bei 7–8 h Schlaf – sonst bringt der Reiz deutlich weniger.');
+  tips.push('📈 <b>Steigerung:</b> Intensität langsam erhöhen (+5–10 % pro Woche), nie zwei harte Tage hintereinander.');
+  tips.push('🔁 <b>Konsistenz:</b> 12+ Wochen dranbleiben – realistisch sind +3–10 % des aktuellen Werts.');
+  tips.push('🧘 <b>Erholung zählt:</b> Dein hoher Easy-Anteil (~80 % Z1/Z2) ist die ideale Basis; die Qualität kommt oben drauf.');
+  if(ap&&ap.age) tips.push('💡 Mit '+ap.age+' Jahren: Intervalle etwas kürzer (z. B. 3×3 min statt 4×4) und volle Pausen nehmen – Regeneration wird wichtiger.');
+  var rating=vo2>=45?'Für dein Alter ein überdurchschnittlicher Wert – so hältst du ihn oben:':'Solider Wert – so verbesserst du ihn:';
+  return '<div class="sig"><span class="name">Aktueller VO2max</span><span class="val sg">'+round1(vo2)+' ml/kg/min</span></div>'+
+    '<div class="note">'+rating+'</div>'+
+    tips.map(function(t){return '<p>'+t+'</p>';}).join('');
+}
+
 function render(D){
   var rpt=D||{};
   var rd=rpt.readiness_decision||{};
@@ -340,6 +369,10 @@ function render(D){
     document.getElementById('zones').innerHTML='<div class="err">Keine Zonendaten</div>';
   }
 
+  // ==== VO2max Tipps ====
+  var vo2Html=buildVo2(rd, dm, cm, f, ap, csZ.thresholds||null, zList);
+  document.getElementById('vo2').innerHTML=vo2Html?vo2Html:'<div class="err">Kein VO2max-Wert vorhanden</div>';
+
   // ==== Signals ====
   var sigHtml="";
   // HRV
@@ -387,7 +420,7 @@ function render(D){
 
   // Sync header
   var upd=(rpt.metadata||{}).last_updated||"";
-  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.2"+(upd?" | Daten: "+upd.slice(0,16):"");
+  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.3"+(upd?" | Daten: "+upd.slice(0,16):"");
   localStorage.setItem('coach_cache',JSON.stringify(D));
   localStorage.setItem('coach_cache_time',String(Date.now()));
 }
