@@ -314,17 +314,19 @@ function weeklyVitals(H){
   days.forEach(function(d){
     if(!d.date) return;
     var key=fmtDate(weekStart(d.date));
-    if(!weeks[key]) weeks[key]={start:weekStart(d.date),tss:0,hrvs:[],sleeps:[]};
+    if(!weeks[key]) weeks[key]={start:weekStart(d.date),tss:0,hrvs:[],sleeps:[],quals:[],rhrs:[]};
     var g=weeks[key];
     g.tss+=(d.total_tss||0);
     if(d.hrv) g.hrvs.push(d.hrv);
     if(d.sleep_hours) g.sleeps.push(d.sleep_hours);
+    if(d.sleep_quality) g.quals.push(d.sleep_quality);
+    if(d.rhr) g.rhrs.push(d.rhr);
   });
   return Object.keys(weeks).sort().map(function(k){
     var g=weeks[k];
+    var avg=function(arr){return arr.length?round1(arr.reduce(function(a,b){return a+b},0)/arr.length):null;};
     return {label:isoWeekLabel(g.start), start:fmtDate(g.start), tss:g.tss,
-            hrv:g.hrvs.length?round1(g.hrvs.reduce(function(a,b){return a+b},0)/g.hrvs.length):null,
-            sleep:g.sleeps.length?round1(g.sleeps.reduce(function(a,b){return a+b},0)/g.sleeps.length):null};
+            hrv:avg(g.hrvs), sleep:avg(g.sleeps), sleepQ:avg(g.quals), rhr:avg(g.rhrs)};
   });
 }
 
@@ -451,7 +453,9 @@ function render(D,H){
   if(wkH.length>=2){
     document.getElementById('vitals').innerHTML=
       '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">💓 HRV (ø/Woche) vs. TSS</div>'+dualChart(wkH,'hrv','#00e676','HRV','ms')+
-      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">😴 Schlaf (ø/Woche) vs. TSS</div>'+dualChart(wkH,'sleep','#ffd600','Schlaf','h');
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">😴 Schlaf (ø/Woche) vs. TSS</div>'+dualChart(wkH,'sleep','#ffd600','Schlaf','h')+
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">🌟 Schlafqualität (ø/Woche, 1–4) vs. TSS</div>'+dualChart(wkH,'sleepQ','#00e5ff','Qualität','/4')+
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">💓 Ruhepuls (ø/Woche) vs. TSS</div>'+dualChart(wkH,'rhr','#e94560','Ruhepuls','bpm');
   }else{
     document.getElementById('vitals').innerHTML='<div class="note">Wochenvergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>';
   }
