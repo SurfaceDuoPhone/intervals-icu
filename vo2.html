@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="manifest" href="manifest.json">
+<title>VO2max Verlauf</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+.header{background:var(--card);padding:12px;text-align:center;border-bottom:1px solid var(--border)}
+.header h1{font-size:16px}
+.header .sync{font-size:10px;color:var(--green);margin-top:4px}
+.container{max-width:600px;margin:0 auto;padding:10px}
+.card{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card h2{font-size:13px;color:var(--accent);margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--muted)}.sv{font-weight:600}
+.sg{color:var(--green)}.sw{color:var(--yellow)}.sb{color:var(--accent)}
+.big{text-align:center;font-size:44px;font-weight:700;padding:10px 0 2px}
+.lbl{text-align:center;font-size:11px;color:var(--muted)}
+.rating{text-align:center;padding:4px 0 10px}
+.rating span{display:inline-block;padding:3px 12px;border-radius:16px;font-size:12px;font-weight:600}
+.rat-good{background:#00e67622;color:var(--green)}
+.rat-mid{background:#ffd60022;color:var(--yellow)}
+.rat-low{background:#e9456022;color:var(--accent)}
+.chartbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
+.chartbox .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
+.barchart{display:flex;align-items:flex-end;gap:2px;height:60px;margin-top:8px}
+.bar{flex:1;border-radius:2px 2px 0 0;min-width:2px;background:var(--green)}
+.bar.last{background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:600;font-size:11px}
+tr.cur{background:#00e67618}
+tr.cur td{color:var(--green);font-weight:600}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100}
+.ni{text-align:center;cursor:pointer;padding:4px 10px;border-radius:6px;font-size:10px;color:var(--muted)}
+.ni:active,.ni.active{background:var(--border);color:var(--text)}
+.ni .ic{font-size:20px}
+.loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+.err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
+.reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>❤️ VO2max Verlauf</h1>
+<div class="sync" id="sync">⏳ Lade...</div>
+</div>
+<div class="container">
+<div class="card"><h2>📊 Aktueller Wert</h2><div id="cur"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📈 Trend &amp; Statistik</h2><div id="stats"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🗺️ Verlauf (90 Tage)</h2><div id="chart"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🎚️ Einordnung (Männer 60–69)</h2><div id="ref"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📝 Hinweise</h2><div id="notes"><div class="loading">Lade...</div></div></div>
+</div>
+<div class="nav">
+<div class="ni" onclick="location.href='dashboard.html'"><div class="ic">📊</div>Dashboard</div>
+<div class="ni" onclick="location.href='coach.html'"><div class="ic">🧠</div>Coach</div>
+<div class="ni" onclick="load()"><div class="ic">🔄</div>Neu laden</div>
+</div>
+<script>
+var GH_REPO="SurfaceDuoPhone/intervals-icu";
+var GH_FILE="latest.json";
+
+function fetchData(){
+  var url="https://raw.githubusercontent.com/"+GH_REPO+"/main/"+GH_FILE+"?v="+Date.now();
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},20000);
+  return fetch(url,{signal:controller.signal,cache:"no-store"})
+    .then(function(r){clearTimeout(timeout);if(!r.ok)throw new Error("GitHub "+r.status);return r.json()})
+    .catch(function(e){clearTimeout(timeout);throw e;});
+}
+
+function sr(l,v,c){
+  return '<div class="sr"><span class="sl">'+l+'</span><span class="sv '+(c||'')+'">'+v+'</span></div>';
+}
+
+function round1(x){return Math.round(x*10)/10;}
+
+function lineChart(values){
+  var W=300,H=120,PAD=8;
+  var min=Math.min.apply(null,values),max=Math.max.apply(null,values);
+  var span=(max-min)||1;
+  var pts=values.map(function(v,i){
+    var x=PAD+(i/(values.length-1||1))*(W-2*PAD);
+    var y=H-PAD-((v-min)/span)*(H-2*PAD);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  var last=pts[pts.length-1].split(',');
+  var grid=[];
+  for(var g=0;g<4;g++){
+    var gy=H-PAD-(g/3)*(H-2*PAD);
+    grid.push('<line x1="'+PAD+'" y1="'+gy.toFixed(1)+'" x2="'+(W-PAD)+'" y2="'+gy.toFixed(1)+'" stroke="#2a2a4a" stroke-width="0.5"/>');
+  }
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:150px;display:block">'+
+    grid.join('')+
+    '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#00e676" stroke-width="2"/>'+
+    '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3.5" fill="#e94560"/>'+
+    '</svg>'+
+    '<div class="axis"><span>'+values[0].toFixed(0)+'</span><span>'+round1(min)+' – '+round1(max)+' ml/kg/min</span><span>'+values[values.length-1].toFixed(0)+'</span></div>';
+}
+
+function render(D){
+  var rpt=D||{};
+  var ap=rpt.athlete_profile||{};
+  var th=(rpt.current_status&&rpt.current_status.thresholds)||{};
+  var vo2Now=(th.vo2max||null);
+  var vh=rpt.vo2max_history||[];
+  var upd=(rpt.metadata||{}).last_updated||"";
+
+  if(!vo2Now&&vh.length) vo2Now=vh[vh.length-1].vo2max;
+
+  // Aktueller Wert + Rating
+  var curEl=document.getElementById('cur');
+  if(vo2Now===null||vo2Now===undefined){
+    curEl.innerHTML='<div class="err">Kein VO2max-Wert vorhanden</div>';
+  }else{
+    var cls=vo2Now>=50?'rat-good':vo2Now>=42?'rat-good':vo2Now>=34?'rat-mid':'rat-low';
+    var txt=vo2Now>=50?'Ausgezeichnet':vo2Now>=42?'Gut – überdurchschnittlich':vo2Now>=34?'Durchschnittlich':'Ausbaufähig';
+    curEl.innerHTML='<div class="big">'+round1(vo2Now)+'</div><div class="lbl">ml/kg/min'+(ap.age?(' · Alter '+ap.age):'')+'</div>'+
+      '<div class="rating"><span class="'+cls+'">'+txt+'</span></div>';
+  }
+
+  // Statistik
+  var stEl=document.getElementById('stats');
+  if(!vh.length){
+    stEl.innerHTML='<div class="err">Noch keine Verlaufsdaten – erscheinen nach den ersten Syncs.</div>';
+  }else{
+    var vals=vh.map(function(x){return x.vo2max});
+    var last=vals[vals.length-1];
+    var avg90=vals.reduce(function(a,b){return a+b},0)/vals.length;
+    var r30=vals.slice(-30);
+    var avg30=r30.reduce(function(a,b){return a+b},0)/r30.length;
+    var d90=last-vals[0];
+    var best=Math.max.apply(null,vals);
+    var n30=(r30.filter(function(v){return v>=(avg30*1.02)}).length);
+    stEl.innerHTML=
+      sr('Aktuell',round1(last)+' ml/kg/min','sg')+
+      sr('⌀ 90 Tage',round1(avg90)+' ml/kg/min')+
+      sr('⌀ 30 Tage',round1(avg30)+' ml/kg/min')+
+      sr('Bestwert (90 Tage)',round1(best)+' ml/kg/min','sg')+
+      sr('Trend (90 Tage)',(d90>0?'▲ +':'▼ ')+Math.abs(round1(d90))+' ml/kg/min',d90>0?'sg':d90<0?'sw':'neutral')+
+      sr('Messungen (90 Tage)',vh.length+'×');
+  }
+
+  // Chart
+  var chEl=document.getElementById('chart');
+  if(vh.length>=2){
+    chEl.innerHTML=lineChart(vh.map(function(x){return x.vo2max}));
+  }else if(vh.length===1){
+    chEl.innerHTML='<div class="note">Bisher nur 1 Messung – Verlauf erscheint mit mehr Daten.</div>';
+  }else{
+    chEl.innerHTML='<div class="err">Keine Verlaufsdaten</div>';
+  }
+
+  // Einordnung
+  var refEl=document.getElementById('ref');
+  var bands=[["unter 34","Niedrig"],["34 – 41","Durchschnittlich"],["42 – 49","Gut"],["50+","Ausgezeichnet"]];
+  var rows=bands.map(function(b){
+    var isCur=vo2Now!==null&&vo2Now!==undefined&&(b[0]==="50+"?vo2Now>=50:(function(){
+      var m=b[0].match(/(\d+)\s*–\s*(\d+)/);
+      if(m) return vo2Now>=parseInt(m[1])&&vo2Now<=parseInt(m[2]);
+      return vo2Now<34;
+    })());
+    return '<tr class="'+(isCur?'cur':'')+'"><td>'+b[0]+'</td><td>'+b[1]+(isCur?' · aktuell':'')+'</td></tr>';
+  }).join('');
+  refEl.innerHTML='<table><tr><th>ml/kg/min</th><th>Einordnung</th></tr>'+rows+'</table>'+
+    '<div class="note">Orientierungswerte für Männer 60–69 Jahre. Dein Wert: '+round1(vo2Now)+' ml/kg/min.</div>';
+
+  // Hinweise
+  var notesEl=document.getElementById('notes');
+  notesEl.innerHTML='<div class="note">'+
+    '• VO2max misst die maximale Sauerstoffaufnahme – ein zentraler Indikator für Ausdauer und Herz-Kreislauf-Gesundheit.<br>'+
+    '• Verbesserung: 2× pro Woche VO2max-Intervalle (deine Standards: 4×4 min oder 5×5 min bei ~90–95 % HFmax, volle Pausen).<br>'+
+    '• Realistisch sind +3–10 % über 12+ Wochen – Konsistenz schlägt Einzelreize.<br>'+
+    '• Mit zunehmendem Alter sinkt VO2max natürlicherweise (~0,5 %/Jahr); der Verlauf zählt mehr als der Einzelwert.<br>'+
+    '• Gemessene Werte kommen aus deinen Aktivitäten/Wellness-Daten (Garmin/Intervals.icu) und aktualisieren sich mit jedem Sync.'+
+    '</div>';
+
+  document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+(upd?' | Daten: '+upd.slice(0,16):'');
+  localStorage.setItem('vo2_cache',JSON.stringify(D));
+  localStorage.setItem('vo2_cache_time',String(Date.now()));
+}
+
+function load(){
+  var cached=null,cachedTime=0;
+  try{cached=localStorage.getItem('vo2_cache');cachedTime=parseInt(localStorage.getItem('vo2_cache_time')||'0',10);}catch(e){}
+  var now=Date.now();
+  if(cached&&now-cachedTime<600000){
+    try{render(JSON.parse(cached));}catch(e){}
+  }
+  fetchData().then(render).catch(function(e){
+    if(!cached){
+      document.getElementById('sync').textContent='❌ '+e.message;
+      document.getElementById('cur').innerHTML='<div class="err">Daten konnten nicht geladen werden.<button class="reload" onclick="load()">Erneut versuchen</button></div>';
+    }else{
+      document.getElementById('sync').textContent='⚠️ Offline – Cache Daten';
+    }
+  });
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(r){r.update();}).catch(function(){});
+}
+load();
+setInterval(load,300000);
+</script>
+</body>
+</html>
