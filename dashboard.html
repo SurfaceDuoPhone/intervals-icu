@@ -41,6 +41,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 .err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
 .reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.btn{display:inline-block;margin:6px 4px 2px 0;padding:9px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.btn.g{background:var(--green);color:#0f0f23}
 .chartbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
 .chartbox .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
 
@@ -96,6 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="sec" id="s-week">
 <div class="card"><h2>📊 Woche: TSS vs. VO2max</h2><div id="wk"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>💓 Woche: Vitalwerte vs. TSS</h2><div id="vitals"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📤 Wochen-Export</h2><div id="expw"><div class="loading">Lade...</div></div></div>
 </div>
 </div>
 <div class="nav">
@@ -159,6 +162,13 @@ function isoWeekLabel(d){
   var week=1+Math.round((t-firstThu)/(7*24*3600*1000));
   return 'KW '+week;
 }
+var LAST_D=null;
+var LAST_H=null;
+function isQuality(a){
+  if(a.intensity_factor!==null&&a.intensity_factor!==undefined&&a.intensity_factor>=0.85) return true;
+  var n=(a.name||'').toLowerCase();
+  return /vo2|intervall|tempo|interval/.test(n);
+}
 function weeklySummary(D){
   var acts=(D&&D.recent_activities)||[];
   var vh=(D&&D.vo2max_history)||[];
@@ -168,7 +178,7 @@ function weeklySummary(D){
     var key=fmtDate(ws);
     if(!weeks[key]) weeks[key]={start:ws,count:0,hours:0,tss:0,qual:0,vo2s:[]};
     var g=weeks[key];
-    g.count++; g.hours+=(a.duration_hours||0); g.tss+=(a.tss||0);
+    g.count++; g.hours+=(a.duration_hours||0); g.tss+=(a.tss||0); if(isQuality(a)) g.qual++;
   });
   vh.forEach(function(x){
     if(!x.date) return;
@@ -177,7 +187,8 @@ function weeklySummary(D){
   });
   return Object.keys(weeks).sort().map(function(k){
     var g=weeks[k];
-    return {label:isoWeekLabel(g.start), start:fmtDate(g.start), tss:g.tss,
+    return {label:isoWeekLabel(g.start), start:fmtDate(g.start), count:g.count,
+            hours:Math.round(g.hours*10)/10, tss:g.tss, qual:g.qual,
             vo2avg:g.vo2s.length?Math.round(g.vo2s.reduce(function(a,b){return a+b},0)/g.vo2s.length*10)/10:null};
   });
 }
@@ -259,6 +270,33 @@ function weeklyCharts(D,H){
   }else{
     vtEl.innerHTML='<div class="note">Wochenvergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>';
   }
+}
+
+function csvDownload(filename, header, rows){
+  var csv=header.join(';')+'\n'+rows.map(function(r){return r.map(function(c){return '"'+String(c===null||c===undefined?'':c).replace(/"/g,'""')+'"';}).join(';');}).join('\n');
+  var blob=new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);
+}
+function exportWeeksDash(){
+  var wk=weeklySummary(LAST_D);
+  if(!wk.length){ alert('Keine Aktivitäten zum Exportieren vorhanden.'); return; }
+  var rows=wk.map(function(g){
+    return [g.label+' ('+g.start+')', g.count, g.hours, g.tss, g.qual, g.vo2avg!==null?g.vo2avg:''];
+  });
+  csvDownload('training_wochen.csv',['Woche','Wochenbeginn','Aktivitaeten','Dauer_h','TSS','Qualitaetsreize','VO2max_avg'],rows);
+}
+function exportVitalsDash(){
+  var wk=weeklyVitals(LAST_H);
+  if(!wk.length){ alert('Keine Vitalwert-Daten zum Exportieren vorhanden.'); return; }
+  var rows=wk.map(function(g){
+    return [g.label+' ('+g.start+')', g.tss, g.hrv!==null?g.hrv:'', g.sleep!==null?g.sleep:'', g.sleepQ!==null?g.sleepQ:'', g.rhr!==null?g.rhr:''];
+  });
+  csvDownload('vitalwerte_wochen.csv',['Woche','Wochenbeginn','TSS','HRV_ms','Schlaf_h','Schlafqualitaet_1_4','Ruhepuls_bpm'],rows);
 }
 
 function render(D,H){
@@ -499,6 +537,9 @@ function render(D,H){
     var ver=(rpt.metadata||{}).version||'?';
     var upd=(rpt.metadata||{}).last_updated||'';
     document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v2.4'+(upd?' | '+upd.slice(5,16):'');
+    LAST_D=D;
+    LAST_H=H||null;
+    document.getElementById('expw').innerHTML='<div class="note">Download als CSV (Excel-kompatibel, UTF-8):</div>'+'<button class="btn g" onclick="exportWeeksDash()">⬇️ Wochenzusammenfassung</button>'+'<button class="btn" onclick="exportVitalsDash()">⬇️ Vitalwerte (Wochen)</button>'+'<div class="note" style="margin-top:6px">Wochenzusammenfassung: Aktivitäten, Dauer, TSS, Qualitätsreize, ø-VO2max. Vitalwerte: HRV, Schlaf, Schlafqualität, Ruhepuls pro Woche.</div>';
     weeklyCharts(D,H);
     try{localStorage.setItem('fd_cache_h',JSON.stringify(H||{}));}catch(e){}
     localStorage.setItem('fd_cache',JSON.stringify(D));
