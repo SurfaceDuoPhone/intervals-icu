@@ -63,6 +63,52 @@
     </div>
   </section>
 
+  <section id="analysisWrap" hidden>
+    <div class="listhead">
+      <h2>Analyse</h2>
+      <span class="chip">neutral &middot; keine Empfehlung</span>
+    </div>
+    <div id="analysisSummary" class="an-summary"></div>
+    <div id="flags" class="flags"></div>
+    <div class="an-grid">
+      <div class="card an-card">
+        <div class="label">Rendite gesamt</div>
+        <div id="anGain" class="big sm">–</div>
+        <div id="anGainSub" class="sub muted">–</div>
+      </div>
+      <div class="card an-card">
+        <div class="label">Rendite p. a.</div>
+        <div id="anCagr" class="big sm">–</div>
+        <div id="anCagrSub" class="sub muted">–</div>
+      </div>
+      <div class="card an-card">
+        <div class="label">Volatilität p. a.</div>
+        <div id="anVol" class="big sm">–</div>
+        <div id="anVolSub" class="sub muted">–</div>
+      </div>
+    </div>
+    <div class="card an-card">
+      <div class="label">Aufteilung nach Währung</div>
+      <div id="curBar" class="bar"></div>
+      <div id="curLegend" class="legend"></div>
+    </div>
+    <div class="card an-card">
+      <div class="label">Aufteilung nach Branche</div>
+      <div id="secBar" class="bar"></div>
+      <div id="secLegend" class="legend"></div>
+    </div>
+    <div class="card an-card">
+      <div class="label">Verlauf 3 Monate (Start = 100)</div>
+      <div id="cmpChart" class="chart"></div>
+      <div id="cmpLegend" class="legend"></div>
+      <p id="cmpPerf" class="sub muted small"></p>
+    </div>
+    <div class="card an-card">
+      <div class="label">Positionen im Detail</div>
+      <div id="anTable" class="antable"></div>
+    </div>
+  </section>
+
   <p id="status" class="status" hidden></p>
   <footer class="muted small">
     Kurse: Yahoo Finance (verzögert) · Wert ohne Gebühren · Einkaufskurs inkl. Kaufkosten eintragen

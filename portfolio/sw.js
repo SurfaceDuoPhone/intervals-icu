@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'portfolio-v1';
+const CACHE = 'portfolio-v2';
 const SHELL = [
   './index.html',
   './style.css',
@@ -22,15 +22,12 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   e.respondWith(
-    caches.match(req).then(cached => {
-      const net = fetch(req).then(res => {
-        if (res && res.ok && url.pathname.indexOf('app.js') < 0) {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => cached);
-      return cached || net;
-    })
+    fetch(req).then(res => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy));
+      }
+      return res;
+    }).catch(() => caches.match(req))
   );
 });

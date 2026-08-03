@@ -101,3 +101,33 @@ button.danger{background:transparent; color:var(--red); border:1px solid var(--r
   .cards{grid-template-columns:1fr 1fr 1fr}
   .card.main{grid-column:auto}
 }
+
+/* ---------- Analyse ---------- */
+.an-summary{background:var(--card2); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; font-size:13px; margin-bottom:10px}
+.flags{display:flex; flex-direction:column; gap:6px; margin-bottom:10px}
+.flag{display:flex; align-items:flex-start; gap:8px; background:var(--card); border:1px solid var(--line); border-left-width:4px; border-radius:10px; padding:9px 11px; font-size:13px}
+.flagdot{flex:none; width:8px; height:8px; border-radius:50%; margin-top:5px}
+.flag.red{border-left-color:var(--red)} .flag.red .flagdot{background:var(--red)}
+.flag.yellow{border-left-color:#f59e0b} .flag.yellow .flagdot{background:#f59e0b}
+.flag.green{border-left-color:var(--green)} .flag.green .flagdot{background:var(--green)}
+.flag.grey{border-left-color:var(--muted)} .flag.grey .flagdot{background:var(--muted)}
+.an-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px}
+.an-card{margin-bottom:10px}
+.bar{display:flex; height:10px; border-radius:6px; overflow:hidden; background:var(--card2); margin-bottom:8px}
+.bar div{height:100%; min-width:0}
+.legend{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--muted)}
+.legitem{display:inline-flex; align-items:center; gap:5px; font-variant-numeric:tabular-nums}
+.legdot{width:8px; height:8px; border-radius:50%; flex:none}
+.chart svg.cmpchart{width:100%; height:150px; display:block; margin-bottom:6px}
+.antable{display:flex; flex-direction:column}
+.anrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line)}
+.anrow:last-child{border-bottom:none}
+.anmid{flex:1; min-width:0}
+.anname{font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ansub{font-size:11px; font-variant-numeric:tabular-nums}
+.anright{text-align:right; font-variant-numeric:tabular-nums}
+.anval{font-size:13px; font-weight:700}
+.ampel{display:flex; gap:3px; flex:none}
+.adot{width:8px; height:8px; border-radius:50%}
+.adot.green{background:var(--green)} .adot.yellow{background:#f59e0b} .adot.red{background:var(--red)}
+@media (max-width:520px){ .an-grid{grid-template-columns:1fr 1fr} }
