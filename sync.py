@@ -2084,6 +2084,7 @@ class IntervalsSync:
                 print("  Garmin BP: no credentials configured")
                 return {}
             garmin = GarminConnect(email=email, password=password)
+            garmin.login()
             from datetime import date, timedelta
             end = date.today()
             start = end - timedelta(days=days)
@@ -2120,6 +2121,7 @@ class IntervalsSync:
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
+            garmin.login()
             from datetime import date, timedelta
             end = date.today()
             result = {}
@@ -2151,6 +2153,7 @@ class IntervalsSync:
             if not email or not password:
                 return {}
             garmin = GarminConnect(email=email, password=password)
+            garmin.login()
             from datetime import date, timedelta
             end = date.today()
             result = {}
