@@ -2069,11 +2069,13 @@ class IntervalsSync:
     def _fetch_garmin_blood_pressure(self, days: int = 7) -> Dict:
         """Fetch blood pressure from Garmin Connect."""
         if not GARMIN_BP_AVAILABLE:
+            print("  Garmin BP: garminconnect not available")
             return {}
         try:
             email = os.environ.get("GARMIN_EMAIL", "")
             password = os.environ.get("GARMIN_PASSWORD", "")
             if not email or not password:
+                print("  Garmin BP: no credentials configured")
                 return {}
             garmin = GarminConnect(email=email, password=password)
             from datetime import date, timedelta
@@ -2902,11 +2904,12 @@ class IntervalsSync:
         # === Preserve Garmin data from previous latest.json when auth fails ===
         cm = data.get("current_status", {}).get("current_metrics", {})
         wd = data.get("wellness_data", [])
-        need_preserve = (
-            not cm.get("spO2") and not cm.get("respiration")
-            and not any(w.get("spO2") for w in wd)
+        missing = (
+            (not cm.get("spO2") and not cm.get("respiration")
+             and not cm.get("systolic") and not cm.get("diastolic"))
+            or not any(w.get("spO2") or w.get("systolic") for w in wd)
         )
-        if need_preserve:
+        if missing:
             try:
                 prev_path = self.data_dir / "latest.json"
                 if prev_path.exists():
@@ -2920,6 +2923,12 @@ class IntervalsSync:
                     if prev_cm.get("respiration") and not cm.get("respiration"):
                         cm["respiration"] = prev_cm["respiration"]
                         print(f"  Preserved Respiration from previous: {prev_cm['respiration']}")
+                    if prev_cm.get("systolic") and not cm.get("systolic"):
+                        cm["systolic"] = prev_cm["systolic"]
+                        print(f"  Preserved Systolic from previous: {prev_cm['systolic']}")
+                    if prev_cm.get("diastolic") and not cm.get("diastolic"):
+                        cm["diastolic"] = prev_cm["diastolic"]
+                        print(f"  Preserved Diastolic from previous: {prev_cm['diastolic']}")
                     for w in wd:
                         d_str = w.get("date") or w.get("start")
                         if d_str and not w.get("spO2"):
@@ -2931,6 +2940,14 @@ class IntervalsSync:
                             for pw in prev_wd:
                                 if (pw.get("date") or pw.get("start")) == d_str and pw.get("respiration"):
                                     w["respiration"] = pw["respiration"]
+                                    break
+                        if d_str and not w.get("systolic") and not w.get("diastolic"):
+                            for pw in prev_wd:
+                                if (pw.get("date") or pw.get("start")) == d_str and (pw.get("systolic") or pw.get("diastolic")):
+                                    if not w.get("systolic") and pw.get("systolic"):
+                                        w["systolic"] = pw["systolic"]
+                                    if not w.get("diastolic") and pw.get("diastolic"):
+                                        w["diastolic"] = pw["diastolic"]
                                     break
                     print(f"  Preserved Garmin data from previous latest.json")
             except Exception as e:
