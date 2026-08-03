@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-03T11:18:21.558029",
+  "generated_at": "2026-08-03T11:39:05.262210",
   "source": "Intervals.icu API",
   "sync_version": "3.112",
-  "script_hash": "8c57d8e879f8",
+  "script_hash": "0ff444752540",
   "data_range": {
     "earliest": "2023-08-12",
     "latest": "2026-08-03",
@@ -4637,7 +4637,7 @@
       "respiration": null,
       "body_fat_pct": null,
       "abdomen_cm": null,
-      "steps": 5290,
+      "steps": 5301,
       "hydration_volume_l": null,
       "kcal_consumed": null,
       "carbohydrates_g": null,
