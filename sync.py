@@ -2873,7 +2873,7 @@ class IntervalsSync:
         if garmin_bp:
             print(f"  Garmin BP: {len(garmin_bp)} days fetched")
             # Overlay Garmin BP onto wellness entries
-            for w_entry in wellness:
+            for w_entry in data.get("wellness_data", []):
                 d_str = w_entry.get("date") or w_entry.get("start")
                 if d_str and d_str in garmin_bp and not w_entry.get("systolic"):
                     bp = garmin_bp[d_str]
@@ -2891,7 +2891,7 @@ class IntervalsSync:
         garmin_spo2 = self._fetch_garmin_spo2(days=7)
         if garmin_spo2:
             print(f"  Garmin SpO2: {len(garmin_spo2)} days fetched")
-            for w_entry in wellness:
+            for w_entry in data.get("wellness_data", []):
                 d_str = w_entry.get("date") or w_entry.get("start")
                 if d_str and d_str in garmin_spo2 and not w_entry.get("spO2"):
                     w_entry["spO2"] = garmin_spo2[d_str].get("average_spO2")
@@ -2903,7 +2903,7 @@ class IntervalsSync:
         garmin_resp = self._fetch_garmin_respiration(days=7)
         if garmin_resp:
             print(f"  Garmin Respiration: {len(garmin_resp)} days fetched")
-            for w_entry in wellness:
+            for w_entry in data.get("wellness_data", []):
                 d_str = w_entry.get("date") or w_entry.get("start")
                 if d_str and d_str in garmin_resp and not w_entry.get("respiration"):
                     w_entry["respiration"] = garmin_resp[d_str].get("avg_waking")
