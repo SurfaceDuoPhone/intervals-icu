@@ -82,6 +82,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="sec" id="s-train">
 <div class="card"><h2>📊 Training</h2><div id="trn"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏋️ Leistung</h2><div id="pow"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📈 Zonen</h2><div id="zon"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏃 Letzte Aktivitäten</h2><div id="acts"><div class="loading">Lade...</div></div></div>
 </div>
 </div>
@@ -279,6 +280,32 @@ function render(D){
         sr('Pmax',th.p_max? th.p_max+' W':'?')+
         sr('W/kg',w.wkg_current? w.wkg_current:'?','sg')+
         sr('LTHR',sp.lthr? sp.lthr+' bpm':'?');
+    }
+
+    // ZONEN (HR + Watt)
+    var zSports=(cs.thresholds&&cs.thresholds.sports)||{};
+    var zSrc=zSports.cycling||zSports.run||null;
+    var zInfo=zSrc&&zSrc.zones||null;
+    var zList=zInfo&&zInfo.zones||[];
+    if(zList.length){
+      var zh='<div style="font-size:12px">'+
+        zList.slice(0,3).map(function(z){
+          var hr='–';
+          if(z.hr_max!==undefined&&z.hr_max!==null) hr=((z.hr_min===null||z.hr_min===undefined)?'<':z.hr_min+'–')+z.hr_max+' bpm';
+          var pw='–';
+          var w=z.power;
+          if(w&&w.w_max!==undefined&&w.w_max!==null){
+            if(w.pct_max>=900) pw='>'+Math.max(0,w.w_min-1)+' W';
+            else if(w.w_min===null||w.w_min===undefined) pw='<'+w.w_max+' W';
+            else pw=w.w_min+'–'+w.w_max+' W';
+          }
+          return '<div class="sr"><span class="sl">'+z.zone+' · '+(z.name||'')+'</span><span class="sv">❤️ '+hr+(pw!=='–'?' · ⚡ '+pw:'')+'</span></div>';
+        }).join('')+
+        (zInfo.ftp_basis?'<div class="note" style="text-align:center;color:var(--muted);font-size:11px">Wattbasis: FTP '+zInfo.ftp_basis+' W</div>':'')+
+        '</div>';
+      document.getElementById('zon').innerHTML=zh;
+    }else{
+      document.getElementById('zon').innerHTML='<div class="err">Keine Zonendaten</div>';
     }
 
     // LETZTE AKTIVITAETEN

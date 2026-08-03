@@ -2988,6 +2988,7 @@ class IntervalsSync:
                     "pace_units": pace_units,
                     "ftp": sport.get("ftp") or None,
                     "ftp_indoor": sport.get("indoor_ftp") or None,
+                    "zones": self._build_zones(sport),
                 }
 
                 populated = sum(1 for v in entry.values() if v is not None)
@@ -2997,6 +2998,50 @@ class IntervalsSync:
                     candidates[family] = (entry, populated, sport_type)
 
         return {family: data for family, (data, _, _) in candidates.items()}
+
+    def _build_zones(self, sport: dict) -> Optional[dict]:
+        """
+        Build zone boundary map from Intervals.icu sportSettings.
+        hr_zones: array of upper bounds (bpm) per zone (Z1..Z7).
+        power_zones: array of upper bounds as % of FTP per zone.
+        Returns absolute wattage bounds when FTP is available.
+        """
+        hr_zones = sport.get("hr_zones") or []
+        hr_names = sport.get("hr_zone_names") or []
+        pw_pct = sport.get("power_zones") or []
+        pw_names = sport.get("power_zone_names") or []
+        ftp = sport.get("ftp") or None
+        if not hr_zones and not pw_pct:
+            return None
+
+        pw = []
+        for i, pct in enumerate(pw_pct):
+            if pct is None:
+                pw.append(None)
+                continue
+            pw.append({
+                "pct_min": pw_pct[i - 1] if i > 0 else None,
+                "pct_max": pct,
+                "w_min": (round(ftp * pw_pct[i - 1] / 100) + 1) if (i > 0 and ftp) else None,
+                "w_max": round(ftp * pct / 100) if ftp else None,
+            })
+
+        zones = []
+        n = max(len(hr_zones), len(pw))
+        for i in range(n):
+            z = {"zone": "Z%d" % (i + 1)}
+            if i < len(hr_names):
+                z["name"] = hr_names[i]
+            if i < len(hr_zones):
+                z["hr_min"] = hr_zones[i - 1] + 1 if i > 0 else None
+                z["hr_max"] = hr_zones[i]
+            if i < len(pw):
+                z["power"] = pw[i]
+                if i < len(pw_names) and "name" not in z:
+                    z["name"] = pw_names[i]
+            zones.append(z)
+
+        return {"ftp_basis": ftp, "zones": zones}
 
     def _build_weight_signal(self, wellness_extended: List[Dict],
                               sport_settings: Dict, power_model: Dict,
