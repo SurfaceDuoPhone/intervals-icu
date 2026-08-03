@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a2e">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="manifest" href="coach-manifest.json">
+<title>Fitness Coach v1.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
+.header{background:var(--card);padding:12px;text-align:center;border-bottom:1px solid var(--border)}
+.header h1{font-size:16px}
+.header .sync{font-size:10px;color:var(--green);margin-top:4px}
+.container{max-width:600px;margin:0 auto;padding:10px}
+.card{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border)}
+.card h2{font-size:13px;color:var(--accent);margin-bottom:10px}
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--muted)}.sv{font-weight:600}
+.sg{color:var(--green)}.sw{color:var(--yellow)}.sb{color:var(--accent)}
+.verdict{text-align:center;padding:14px 0}
+.verdict .big{font-size:26px;font-weight:700;letter-spacing:1px}
+.verdict .sub{font-size:12px;color:var(--muted);margin-top:6px}
+.v-go{color:var(--green)}.v-modify{color:var(--yellow)}.v-skip{color:var(--accent)}
+.rec{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid var(--border)}
+.rec-go{border-left-color:var(--green)}.rec-modify{border-left-color:var(--yellow)}.rec-skip{border-left-color:var(--accent)}
+.rec h3{font-size:14px;margin-bottom:8px}
+.rec p{font-size:13px;line-height:1.6;margin:4px 0}
+.rec .hint{font-size:12px;color:var(--muted)}
+.sig{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sig:last-child{border-bottom:none}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-g{background:var(--green)}.dot-a{background:var(--yellow)}.dot-r{background:var(--accent)}.dot-u{background:var(--muted)}
+.sig .name{flex:1;color:var(--muted)}
+.sig .val{font-weight:600}
+.sig .delta{font-size:11px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin:4px 0}
+.loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+.err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
+.reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.alert{background:#e9456022;border:1px solid var(--accent);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🏋️ Fitness Coach</h1>
+<div class="sync" id="sync">⏳ Lade...</div>
+</div>
+<div class="container">
+<div class="card" id="verdictCard"><div class="loading">Werte latest.json aus...</div></div>
+<div id="recBox"></div>
+<div class="card"><h2>📡 Vital-Signale</h2><div id="signals"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📝 Notizen</h2><div id="notes"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>⚠️ Alerts</h2><div id="alerts"><div class="loading">Lade...</div></div></div>
+</div>
+<div class="nav" style="position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100">
+<div style="text-align:center;padding:4px 10px;font-size:10px;color:var(--muted)" onclick="location.href='dashboard.html'"><div style="font-size:20px">📊</div>Dashboard</div>
+<div style="text-align:center;padding:4px 10px;border-radius:6px;font-size:10px;color:var(--text);background:var(--border)" onclick="load()"><div style="font-size:20px">🔄</div>Neu laden</div>
+</div>
+<script>
+var GH_REPO="SurfaceDuoPhone/intervals-icu";
+var GH_FILE="latest.json";
+
+function fetchData(){
+  var url="https://raw.githubusercontent.com/"+GH_REPO+"/main/"+GH_FILE+"?v="+Date.now();
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},20000);
+  return fetch(url,{signal:controller.signal,cache:"no-store"})
+    .then(function(r){clearTimeout(timeout);if(!r.ok)throw new Error("GitHub "+r.status);return r.json();})
+    .catch(function(e){clearTimeout(timeout);throw e;});
+}
+
+function round1(x){return Math.round(x*10)/10;}
+function round2(x){return Math.round(x*100)/100;}
+
+function sigRow(name,value,delta,status){
+  var dot=status==="green"?'dot-g':status==="amber"?'dot-a':status==="red"?'dot-r':'dot-u';
+  var col=status==="green"?'sg':status==="amber"?'sw':status==="red"?'sb':'';
+  return '<div class="sig"><span class="dot '+dot+'"></span><span class="name">'+name+'</span>'+
+    (delta?'<span class="delta">'+delta+'</span>':'')+
+    '<span class="val '+col+'">'+value+'</span></div>';
+}
+
+function render(D){
+  var rpt=D||{};
+  var rd=rpt.readiness_decision||{};
+  var dm=rpt.derived_metrics||{};
+  var cm=(rpt.current_status||{}).current_metrics||{};
+  var f=(rpt.current_status||{}).fitness||{};
+  var ap=rpt.athlete_profile||{};
+  var sig=rd.signals||{};
+  var rec=rd.recommendation||"go";
+  var reason=rd.reason||"";
+  var adj=((rd.modification||{}).suggested_adjustments)||{};
+  var intensity=adj.intensity||"preserve";
+  var volume=adj.volume||"preserve";
+  var capZone=adj.cap_zone||null;
+
+  // ==== Verdict ====
+  var verdictEl=document.getElementById('verdictCard');
+  var vBig,vClass,vSub;
+  if(rec==="go"){vBig="Volle Belastung";vClass="v-go";vSub="Grünes Licht – Training wie geplant möglich.";}
+  else if(rec==="skip"){vBig="Erholungstag";vClass="v-skip";vSub="Regeneration hat Priorität – heute keine Belastung.";}
+  else{vBig="Training anpassen";vClass="v-modify";vSub="Bereit, aber mit Reduzierung trainieren.";}
+  var p=rd.priority||"";
+  verdictEl.innerHTML='<div class="verdict"><div class="big '+vClass+'">'+vBig+'</div>'+
+    '<div class="sub">'+vSub+(p?' · Priorität P'+p:'')+'</div></div>'+
+    (reason?'<div class="note" style="text-align:center">'+reason+'</div>':'');
+
+  // ==== Recommendation ====
+  var recBox=document.getElementById('recBox');
+  var lines=[];
+  var cls=rec==="go"?'rec-go':rec==="skip"?'rec-skip':'rec-modify';
+
+  // Concrete session suggestion
+  var hrvD=null;if(sig.hrv&&sig.hrv.baseline_7d)hrvD=((sig.hrv.value-sig.hrv.baseline_7d)/sig.hrv.baseline_7d*100);
+  var sleepH=sig.sleep?sig.sleep.hours:(cm.sleep_hours||null);
+  var tsb=f.tsb;
+  var acwr=dm.acwr;
+
+  if(rec==="go"){
+    if(tsb===null||tsb===undefined) lines.push('🏃 <b>Ausdauer-Einheit Z2</b> (60–90 min). Solide Grundlage aufbauen.');
+    else if(tsb>10) lines.push('⚡ <b>Qualitätstag:</b> Intervalle möglich (z. B. 4×4 min Z3/Z4 mit 3 min Pause) oder 60–90 min mit Tempowechseln.');
+    else if(tsb>=-10) lines.push('🏃 <b>Ausdauer Z2</b> (60–90 min) – bei gutem Gefühl kurze Z3-Reize einbauen.');
+    else lines.push('🚶 <b>Moderate Ausdauer</b> (45–60 min Z1/Z2), bewusst ohne harte Antritte – TSB ist tief.');
+  }else if(rec==="modify"){
+    var parts=[];
+    if(intensity==="reduce") parts.push('Intensität reduzieren – keine harten Intervalle');
+    if(volume==="reduce") parts.push('Umfang kürzen (ca. 30–50 % weniger)');
+    if(capZone) parts.push('Maximal Zone '+capZone);
+    if(!parts.length) parts.push('Belastung moderat reduzieren');
+    lines.push('🚴 <b>Leichte Einheit:</b> 45–60 min '+(capZone?('max. Z'+capZone):'Z1–Z2')+' im lockeren Tempo.');
+    lines.push('⚠️ '+parts.join(' · ')+'.');
+    if(sig.hrv&&sig.hrv.status==="amber") lines.push('❤️ HRV '+round1(sig.hrv.value)+' ms liegt '+round1(sig.hrv.delta_pct)+' % unter Baseline – Autonomes Nervensystem ist angespannt.');
+    if(sig.rhr&&sig.rhr.status==="amber") lines.push('💓 Ruhepuls '+sig.rhr.value+' bpm ('+(sig.rhr.delta_bpm>0?'+':'')+sig.rhr.delta_bpm+' bpm über Baseline) – Erholungslage angespannt.');
+  }else{
+    lines.push('😴 <b>Ruhetag:</b> Kein Training. Spaziergang oder Dehnung in Z1 optional.');
+    lines.push('🛌 Fokus: Schlaf (7–8 h), Flüssigkeit und Ernährung. Morgen neu bewerten.');
+    if(acwr!==null&&acwr!==undefined&&acwr>=1.5) lines.push('🚨 ACWR '+round2(acwr)+' – Überlastungsgefahr hoch! Mehrere Ruhetage einplanen.');
+  }
+
+  // Sleep note
+  if(sleepH!==null&&sleepH!==undefined&&sleepH<6.5&&rec!=="skip"){
+    lines.push('😴 Schlaf '+round1(sleepH)+' h – Schlafdefizit. Einheit verkürzen oder besser verschieben.');
+  }
+
+  // ACWR note
+  if(acwr!==null&&acwr!==undefined){
+    if(acwr<0.8) lines.push('📉 ACWR '+round2(acwr)+' – leichte Unterbelastung. Falls bewusste Erholung: ok; sonst Belastung langsam steigern.');
+    else if(acwr>=1.3&&rec!=="skip") lines.push('📈 ACWR '+round2(acwr)+' – hohe Belastung. Auf Überlastungszeichen achten.');
+  }
+
+  // Monotony
+  if(dm.monotony!==null&&dm.monotony!==undefined&&dm.monotony>0.8){
+    lines.push('🔁 Monotonie '+round2(dm.monotony)+' – wenig Abwechslung. Verschiedene Einheiten/Strecken einbauen.');
+  }
+
+  var hint='';
+  if(ap.age) hint+='Mit '+ap.age+' Jahren Erholung besonders ernst nehmen. ';
+  if(ap.sex&&ap.sex==='M') hint+='';
+  recBox.innerHTML='<div class="rec '+cls+'"><h3>📋 Empfehlung für heute</h3>'+
+    lines.map(function(l){return '<p>'+l+'</p>';}).join('')+
+    (hint?'<p class="hint">💡 '+hint+'</p>':'')+'</div>';
+
+  // ==== Signals ====
+  var sigHtml="";
+  // HRV
+  if(sig.hrv){var h= sig.hrv;sigHtml+=sigRow("HRV (7d-Basis)",round1(h.value)+" ms",(h.delta_pct!==null&&h.delta_pct!==undefined)?(h.delta_pct>0?"+":"")+round1(h.delta_pct)+" %":null,h.status);}
+  // RHR
+  if(sig.rhr){var r=sig.rhr;sigHtml+=sigRow("Ruhepuls (7d-Basis)",r.value+" bpm",(r.delta_bpm!==null&&r.delta_bpm!==undefined)?((r.delta_bpm>0?"+":"")+r.delta_bpm+" bpm"):null,r.status);}
+  // Sleep
+  if(sig.sleep){var s=sig.sleep;sigHtml+=sigRow("Schlaf",round1(s.hours)+" h",(s.quality?"Qualität "+s.quality+"/4":null),s.status);}
+  // ACWR
+  if(sig.acwr){var a=sig.acwr;sigHtml+=sigRow("ACWR",round2(a.value),null,a.status);}
+  // Recovery
+  if(sig.ri){var ri=sig.ri;sigHtml+=sigRow("Recovery Index",round2(ri.value),(ri.value_yesterday?"gestern "+round2(ri.value_yesterday):null),ri.status);}
+  // TSB
+  if(sig.tsb){var t=sig.tsb;sigHtml+=sigRow("TSB",round1(t.value),(t.status==="green"?"frisch":null),t.status);}
+  document.getElementById('signals').innerHTML=sigHtml||'<div class="note">Keine Signale vorhanden.</div>';
+
+  // ==== Notes ====
+  var notes=[];
+  if(dm.strain!==null&&dm.strain!==undefined) notes.push("Belastung (Strain, 7d): "+round1(dm.strain));
+  if(dm.stress_tolerance!==null&&dm.stress_tolerance!==undefined) notes.push("Stresstoleranz: "+dm.stress_tolerance);
+  if(dm.load_recovery_ratio!==null&&dm.load_recovery_ratio!==undefined) notes.push("Load/Recovery-Verhältnis: "+round2(dm.load_recovery_ratio));
+  if(dm.phase_detected) notes.push("Phase: "+dm.phase_detected);
+  if(dm.consistency_index!==null&&dm.consistency_index!==undefined) notes.push("Konsistenz: "+round2(dm.consistency_index));
+  if(dm.easy_time_ratio!==null&&dm.easy_time_ratio!==undefined) notes.push("Easy-Time-Anteil: "+round2(dm.easy_time_ratio)+" (Ziel ~0.80)");
+  if(dm.grey_zone_percentage!==null&&dm.grey_zone_percentage!==undefined) notes.push("Grey Zone: "+round1(dm.grey_zone_percentage)+" % der Zeit");
+  if(dm.seiler_tid_7d&&dm.seiler_tid_7d.classification) notes.push("Trainingsverteilung: "+dm.seiler_tid_7d.classification+" (Z1 "+round1(dm.seiler_tid_7d.z1_pct)+" % / Z2 "+round1(dm.seiler_tid_7d.z2_pct)+" % / Z3 "+round1(dm.seiler_tid_7d.z3_pct)+" %)");
+  if(f.ctl!==undefined) notes.push("Fitness (CTL): "+f.ctl.toFixed(1));
+  if(f.atl!==undefined) notes.push("Ermüdung (ATL): "+f.atl.toFixed(1));
+  if(f.tsb!==undefined) notes.push("Form (TSB): "+f.tsb.toFixed(1));
+  if(cm.spO2) notes.push("SpO2: "+cm.spO2+" %");
+  if(cm.systolic&&cm.diastolic) notes.push("Blutdruck: "+cm.systolic+"/"+cm.diastolic+" mmHg");
+  if(cm.respiration) notes.push("Atemfrequenz: "+cm.respiration+"/min");
+  document.getElementById('notes').innerHTML=notes.length?
+    notes.map(function(n){return '<div class="note">• '+n+'</div>';}).join(''):
+    '<div class="note">Keine Notizen verfügbar.</div>';
+
+  // ==== Alerts ====
+  var alerts=rpt.alerts||[];
+  var ah="";
+  alerts.forEach(function(al){
+    var ic=al.severity==="alarm"?"🔴":al.severity==="warning"?"🟡":"ℹ️";
+    ah+='<div class="alert">'+ic+' <b>'+al.metric+'</b>: '+al.context+'</div>';
+  });
+  document.getElementById('alerts').innerHTML=ah||'<div class="note" style="color:var(--green)">✅ Keine aktiven Alerts.</div>';
+
+  // Sync header
+  var upd=(rpt.metadata||{}).last_updated||"";
+  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.0"+(upd?" | Daten: "+upd.slice(0,16):"");
+  localStorage.setItem('coach_cache',JSON.stringify(D));
+  localStorage.setItem('coach_cache_time',String(Date.now()));
+}
+
+function load(){
+  document.getElementById('sync').textContent="⏳ Lade latest.json...";
+  var cached=localStorage.getItem('coach_cache');
+  var cachedTime=parseInt(localStorage.getItem('coach_cache_time')||'0');
+  if(cached&&Date.now()-cachedTime<300000){
+    try{render(JSON.parse(cached));}catch(e){}
+  }
+  fetchData().then(render).catch(function(e){
+    if(!cached){
+      document.getElementById('sync').textContent="❌ "+e.message;
+      document.getElementById('verdictCard').innerHTML='<div class="err">Daten konnten nicht geladen werden.<button class="reload" onclick="load()">Erneut versuchen</button></div>';
+    }else{
+      document.getElementById('sync').textContent="⚠️ Offline – Cache Daten";
+    }
+  });
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(function(r){r.update();}).catch(function(){});
+}
+load();
+setInterval(load,600000);
+</script>
+</body>
+</html>
