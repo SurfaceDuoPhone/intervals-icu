@@ -32,7 +32,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .bp-warn{background:#ffd60022;color:var(--yellow)}
 .chart{display:flex;align-items:flex-end;gap:2px;height:50px;margin-top:8px}
 .bar{flex:1;border-radius:2px 2px 0 0;min-width:2px}
-.bs{background:var(--accent)}.bd{background:var(--blue)}.bsl{background:var(--blue)}
+.bs{background:var(--accent)}.bd{background:var(--blue)}.bsl{background:var(--blue)}.bv{background:var(--green)}
 .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100}
 .ni{text-align:center;cursor:pointer;padding:4px 10px;border-radius:6px;font-size:10px;color:var(--muted)}
 .ni:active,.ni.active{background:var(--border);color:var(--text)}
@@ -83,6 +83,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="card"><h2>📊 Training</h2><div id="trn"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏋️ Leistung</h2><div id="pow"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📈 Zonen</h2><div id="zon"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>❤️ VO2max Trend</h2><div id="vo2C"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏃 Letzte Aktivitäten</h2><div id="acts"><div class="loading">Lade...</div></div></div>
 </div>
 </div>
@@ -306,6 +307,28 @@ function render(D){
       document.getElementById('zon').innerHTML=zh;
     }else{
       document.getElementById('zon').innerHTML='<div class="err">Keine Zonendaten</div>';
+    }
+
+    // VO2MAX TREND
+    var vh=rpt.vo2max_history||[];
+    if(vh.length){
+      var lastV=vh[vh.length-1].vo2max;
+      var avg90=(vh.reduce(function(a,b){return a+b.vo2max},0)/vh.length).toFixed(1);
+      var recent=vh.slice(-30);
+      var minV=Math.min.apply(null,recent.map(function(x){return x.vo2max}));
+      var maxV=Math.max.apply(null,recent.map(function(x){return x.vo2max}));
+      var span=(maxV-minV)||1;
+      var dTot=lastV-vh[0].vo2max;
+      document.getElementById('vo2C').innerHTML=
+        sr('Aktuell',lastV+' ml/kg/min','sg')+
+        sr('⌀ (90 Tage)',avg90+' ml/kg/min','sg')+
+        sr('Trend (90 Tage)',(dTot>0?'▲ +':'▼ ')+Math.abs(dTot).toFixed(1)+' ml/kg/min',dTot>0?'sg':dTot<0?'sw':'neutral')+
+        '<div class="chart">'+recent.map(function(x){
+          var h=Math.max(6,((x.vo2max-minV)/span)*50);
+          return '<div class="bar bv" style="height:'+h.toFixed(1)+'px" title="'+x.date+': '+x.vo2max+' ml/kg/min"></div>';
+        }).join('')+'</div>';
+    }else{
+      document.getElementById('vo2C').innerHTML='<div class="err">Keine VO2max-Daten</div>';
     }
 
     // LETZTE AKTIVITAETEN

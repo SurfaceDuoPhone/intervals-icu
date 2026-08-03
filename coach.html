@@ -9,7 +9,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="manifest" href="coach-manifest.json">
-<title>Fitness Coach v1.3</title>
+<title>Fitness Coach v1.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -242,14 +242,14 @@ function buildVo2(rd, dm, cm, f, ap, th, zList){
   var acwr=dm.acwr;
   var tired=(hrv==='amber'||hrv==='red'||rhr==='red'||(acwr!==null&&acwr!==undefined&&acwr>=1.3));
   var tips=[];
-  tips.push('⚡ <b>2× pro Woche VO2max-Intervalle:</b> z. B. 4×4 min bei ~90–95 % HFmax (= deine Z5: '+hr5+') mit 3–4 min lockerer Pause. Der wissenschaftlich beste Reiz.');
+  tips.push('⚡ <b>2× pro Woche VO2max-Intervalle:</b> Deine Standards 4×4 min und 5×5 min bei ~90–95 % HFmax (= deine Z5: '+hr5+') mit 3–4 min lockerer Pause. Beides funktioniert – 5×5 ist die anspruchsvollere Variante.');
   if(w5) tips.push('🚴 Am Rad: 5×3 min bei maximaler, gleichmäßiger Leistung (Z5 = '+w5+').');
   if(tired) tips.push('⚠️ <b>Heute/aktuell kein Intervall:</b> HRV bzw. Ruhepuls zeigen erhöhte Ermüdung. Erst wieder, wenn HRV über Baseline und Ruhepuls normal sind.');
   if(sleepH!==null&&sleepH!==undefined&&sleepH<7) tips.push('😴 Schlaf (aktuell '+round1(sleepH)+' h): Intervalle nur bei 7–8 h Schlaf – sonst bringt der Reiz deutlich weniger.');
   tips.push('📈 <b>Steigerung:</b> Intensität langsam erhöhen (+5–10 % pro Woche), nie zwei harte Tage hintereinander.');
   tips.push('🔁 <b>Konsistenz:</b> 12+ Wochen dranbleiben – realistisch sind +3–10 % des aktuellen Werts.');
   tips.push('🧘 <b>Erholung zählt:</b> Dein hoher Easy-Anteil (~80 % Z1/Z2) ist die ideale Basis; die Qualität kommt oben drauf.');
-  if(ap&&ap.age) tips.push('💡 Mit '+ap.age+' Jahren: Intervalle etwas kürzer (z. B. 3×3 min statt 4×4) und volle Pausen nehmen – Regeneration wird wichtiger.');
+  if(ap&&ap.age) tips.push('💡 Mit '+ap.age+' Jahren: 5×5 nur bei guter Erholung – sonst lieber 4×4 wählen und volle Pausen nehmen. Regeneration wird wichtiger.');
   var rating=vo2>=45?'Für dein Alter ein überdurchschnittlicher Wert – so hältst du ihn oben:':'Solider Wert – so verbesserst du ihn:';
   return '<div class="sig"><span class="name">Aktueller VO2max</span><span class="val sg">'+round1(vo2)+' ml/kg/min</span></div>'+
     '<div class="note">'+rating+'</div>'+
@@ -420,7 +420,7 @@ function render(D){
 
   // Sync header
   var upd=(rpt.metadata||{}).last_updated||"";
-  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.3"+(upd?" | Daten: "+upd.slice(0,16):"");
+  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.4"+(upd?" | Daten: "+upd.slice(0,16):"");
   localStorage.setItem('coach_cache',JSON.stringify(D));
   localStorage.setItem('coach_cache_time',String(Date.now()));
 }

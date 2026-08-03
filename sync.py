@@ -2459,6 +2459,11 @@ class IntervalsSync:
         
         # Extended wellness for baselines (use full 28 days if available)
         wellness_extended = self._intervals_get("wellness", {"oldest": oldest_extended, "newest": newest})
+
+        # Fetch ~90d wellness for VO2max trend
+        print("Fetching 90d wellness for VO2max trend...")
+        wellness_vo2 = self._intervals_get("wellness", {"oldest": (datetime.now() - timedelta(days=89)).strftime("%Y-%m-%d"), "newest": newest})
+        vo2max_history = [{"date": w.get("date"), "vo2max": w.get("vo2max")} for w in wellness_vo2 if w.get("vo2max")]
         
         # Fetch today's wellness for live estimates (eFTP, W', P-max, VO2max, etc.)
         print("Fetching today's wellness (eFTP, W', P-max, VO2max)...")
@@ -2854,6 +2859,7 @@ class IntervalsSync:
                 athlete_units=athlete_units
             ),
             "wellness_data": self._format_wellness(wellness, athlete_units),
+            "vo2max_history": vo2max_history,
             "planned_workouts": formatted_planned_workouts,
             "workout_summary_stats": getattr(self, '_summary_stats', {}),
             "weekly_summary": self._compute_weekly_summary(activities_display, wellness),
