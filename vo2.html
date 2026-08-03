@@ -33,6 +33,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .rat-low{background:#e9456022;color:var(--accent)}
 .chartbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
 .chartbox .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
+.legend{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-top:6px;flex-wrap:wrap;gap:4px}
+.lg{display:inline-flex;align-items:center;gap:5px}
+.dot2{display:inline-block;width:9px;height:9px;border-radius:50%;flex:none}
+.sq2{display:inline-block;width:9px;height:9px;border-radius:2px;flex:none}
 .barchart{display:flex;align-items:flex-end;gap:2px;height:60px;margin-top:8px}
 .bar{flex:1;border-radius:2px 2px 0 0;min-width:2px;background:var(--green)}
 .bar.last{background:var(--accent)}
@@ -157,7 +161,10 @@ function lineChart(values){
     '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#00e676" stroke-width="2"/>'+
     '<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3.5" fill="#e94560"/>'+
     '</svg>'+
-    '<div class="axis"><span>'+values[0].toFixed(0)+'</span><span>'+round1(min)+' – '+round1(max)+' ml/kg/min</span><span>'+values[values.length-1].toFixed(0)+'</span></div>';
+    '<div class="legend"><span class="lg"><span class="dot2" style="background:#00e676"></span>VO2max (90 Tage)</span>'+
+    '<span class="lg"><span class="dot2" style="background:#e94560"></span>Jetzt: '+round1(values[values.length-1])+'</span></div>'+
+    '<div class="axis"><span>Min '+round1(min)+'</span><span>Ø '+round1(values.reduce(function(a,b){return a+b},0)/values.length)+'</span><span>Max '+round1(max)+'</span></div>'+
+    '<div style="text-align:center;font-size:9px;color:var(--muted);margin-top:2px">ml/kg/min</div>';
 }
 
 function renderTraining(D){
@@ -293,7 +300,9 @@ function weeklyChart(D){
   }).join('');
   el.innerHTML='<div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:170px;display:block">'+
     grid+bars+line+circles+labels+'</svg>'+
-    '<div class="axis"><span>■ TSS (blau)</span><span>● ø-VO2max (grün): '+round1(minV)+'–'+round1(maxV)+'</span></div></div>'+
+    '<div class="legend"><span class="lg"><span class="sq2" style="background:#448aff"></span>TSS</span>'+
+    '<span class="lg"><span class="dot2" style="background:#00e676"></span>ø-VO2max</span></div>'+
+    '<div class="axis"><span>Min '+round1(minV)+'</span><span>Max '+round1(maxV)+' ml/kg/min</span></div></div>'+
     '<div class="note" style="margin-top:6px">Qualitätsreize pro Woche: '+wk.map(function(w){return w.label+' '+w.qual;}).join(' · ')+'</div>';
 }
 
@@ -365,7 +374,9 @@ function dualChart(weeks,vkey,vcolor,vlabel,vunit){
   }).join('');
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:150px;display:block">'+
     grid+bars+line+circles+labels+'</svg>'+
-    '<div class="axis"><span>■ TSS (blau)</span><span>● '+vlabel+': '+round1(minV)+'–'+round1(maxV)+' '+vunit+'</span></div>';
+    '<div class="legend"><span class="lg"><span class="sq2" style="background:#448aff"></span>TSS</span>'+
+    '<span class="lg"><span class="dot2" style="background:'+vcolor+'"></span>'+vlabel+'</span></div>'+
+    '<div class="axis"><span>Min '+round1(minV)+'</span><span>Max '+round1(maxV)+' '+vunit+'</span></div>';
 }
 
 function render(D,H){
