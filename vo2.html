@@ -105,6 +105,25 @@ function isQuality(a){
   var n=(a.name||'').toLowerCase();
   return /vo2|intervall|tempo|interval/.test(n);
 }
+function fmtDate(d){
+  var p=function(x){return (x<10?'0':'')+x;};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function weekStart(dateStr){
+  var d=new Date((dateStr||'').slice(0,10)+'T00:00:00');
+  var day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function isoWeekLabel(d){
+  var t=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  var dayNr=(t.getDay()+6)%7;
+  t.setDate(t.getDate()-dayNr+3);
+  var firstThu=new Date(t.getFullYear(),0,1);
+  if(firstThu.getDay()!==4){ firstThu.setMonth(0,1+((4-firstThu.getDay())+7)%7); }
+  var week=1+Math.round((t-firstThu)/(7*24*3600*1000));
+  return 'KW '+week;
+}
 
 function lineChart(values){
   var W=300,H=120,PAD=8;
@@ -198,6 +217,33 @@ function exportTrain(){
   }));
 }
 
+function exportWeeks(){
+  var D=LAST_D||{};
+  var acts=D.recent_activities||[];
+  var vh=D.vo2max_history||[];
+  if(!acts.length){ alert('Keine Aktivitäten zum Exportieren vorhanden.'); return; }
+  var weeks={};
+  acts.forEach(function(a){
+    var ws=weekStart(a.date);
+    var key=fmtDate(ws);
+    if(!weeks[key]) weeks[key]={start:ws,count:0,hours:0,tss:0,qual:0,vo2s:[]};
+    var g=weeks[key];
+    g.count++; g.hours+=(a.duration_hours||0); g.tss+=(a.tss||0); if(isQuality(a)) g.qual++;
+  });
+  vh.forEach(function(x){
+    if(!x.date) return;
+    var key=fmtDate(weekStart(x.date));
+    if(weeks[key]) weeks[key].vo2s.push(x.vo2max);
+  });
+  var keys=Object.keys(weeks).sort();
+  var rows=keys.map(function(k){
+    var g=weeks[k];
+    var vo2=g.vo2s.length?round1(g.vo2s.reduce(function(a,b){return a+b},0)/g.vo2s.length):'';
+    return [isoWeekLabel(g.start)+' ('+fmtDate(g.start)+')', g.count, round1(g.hours), g.tss, g.qual, vo2];
+  });
+  csvDownload('training_wochen.csv',['Woche','Wochenbeginn','Aktivitaeten','Dauer_h','TSS','Qualitaetsreize','VO2max_avg'],rows);
+}
+
 function render(D){
   var rpt=D||{};
   var ap=rpt.athlete_profile||{};
@@ -280,7 +326,8 @@ function render(D){
   document.getElementById('exp').innerHTML='<div class="note">Download als CSV (Excel-kompatibel, UTF-8):</div>'+
     '<button class="btn g" onclick="exportVo2()">⬇️ VO2max-Verlauf</button>'+
     '<button class="btn" onclick="exportTrain()">⬇️ Training (alle)</button>'+
-    '<div class="note" style="margin-top:6px">Training enthält die zuletzt gelieferten Aktivitäten aus latest.json.</div>';
+    '<button class="btn" onclick="exportWeeks()">⬇️ Wochenzusammenfassung</button>'+
+    '<div class="note" style="margin-top:6px">Wochenzusammenfassung: Aktivitäten, Dauer, TSS, Qualitätsreize und ø-VO2max pro Woche (aus den zuletzt gelieferten Daten).</div>';
 
   document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+(upd?' | Daten: '+upd.slice(0,16):'');
   localStorage.setItem('vo2_cache',JSON.stringify(D));
