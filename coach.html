@@ -9,7 +9,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <link rel="manifest" href="coach-manifest.json">
-<title>Fitness Coach v1.0</title>
+<title>Fitness Coach v1.1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0f0f23;--card:#1a1a2e;--accent:#e94560;--green:#00e676;--yellow:#ffd600;--blue:#448aff;--text:#e0e0e0;--muted:#888;--border:#2a2a4a}
@@ -55,6 +55,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="container">
 <div class="card" id="verdictCard"><div class="loading">Werte latest.json aus...</div></div>
 <div id="recBox"></div>
+<div class="card"><h2>📅 Empfehlung für morgen</h2><div id="tmrw"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>🗓️ Plan nächste 7–10 Tage</h2><div id="plan"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📡 Vital-Signale</h2><div id="signals"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📝 Notizen</h2><div id="notes"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>⚠️ Alerts</h2><div id="alerts"><div class="loading">Lade...</div></div></div>
@@ -85,6 +87,143 @@ function sigRow(name,value,delta,status){
   return '<div class="sig"><span class="dot '+dot+'"></span><span class="name">'+name+'</span>'+
     (delta?'<span class="delta">'+delta+'</span>':'')+
     '<span class="val '+col+'">'+value+'</span></div>';
+}
+
+function dayLabel(d){
+  return d.toLocaleDateString('de-DE',{weekday:'short'})+', '+d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+}
+function planRow(date, icon, label, dur, zones, tss){
+  return '<div class="sig"><span class="name" style="width:88px;flex:none">'+dayLabel(date)+'</span>'+
+    '<span style="flex:1;font-size:13px">'+icon+' '+label+(dur?' · '+dur:'')+'</span>'+
+    '<span class="delta">'+(zones||'')+'</span>'+
+    (tss?'<span class="val">'+tss+' TSS</span>':'')+'</div>';
+}
+
+function buildTomorrow(rec, rd, dm, cm, f){
+  var lines=[];
+  var sig=rd.signals||{};
+  var hrv=sig.hrv?{status:sig.hrv.status,delta:sig.hrv.delta_pct}:null;
+  var rhr=sig.rhr?{status:sig.rhr.status,delta:sig.rhr.delta_bpm}:null;
+  var sleepH=(sig.sleep?sig.sleep.hours:null)||cm.sleep_hours;
+  var tsb=(f.tsb!==undefined&&f.tsb!==null)?f.tsb:null;
+  var acwr=dm.acwr;
+
+  // Start: adjust from today
+  if(rec==="skip") lines.push('🚶 <b>Ganz locker</b> – 30 min Z1 oder kompletter Ruhetag. Nur wenn du dich ausgeruht fühlst.');
+  else if(rec==="modify") lines.push('🚴 <b>Erholungsfahrt</b> – 45–60 min Z1–Z2, keine Tempowechsel.');
+  else{
+    if(tsb!==null&&tsb>10) lines.push('⚡ <b>Qualitätstag</b> – 60–75 min inkl. 3–4×3 min Z3 (Pause 3 min).');
+    else lines.push('🏃 <b>Ausdauer</b> – 60–75 min Z2. Ruhig beginnen, Puls im Auge behalten.');
+  }
+  // Modifiers
+  if(sleepH!==null&&sleepH!==undefined&&sleepH<6.5) lines.push('😴 Wenig Schlaf ('+round1(sleepH)+' h) – Einheit kürzen oder auf den Nachmittag verschieben.');
+  if(hrv&&hrv.status==="amber") lines.push('❤️ HRV noch unter Baseline – morgen VOR dem Training checken: bleibt der Wert tief, nur Z1 fahren.');
+  if(hrv&&hrv.status==="red") lines.push('❤️ HRV deutlich unter Baseline – Ruhe bevorzugen.');
+  if(rhr&&rhr.status==="red") lines.push('💓 Ruhepuls erhöht – auf Belastung verzichten.');
+  if(acwr!==null&&acwr!==undefined&&acwr>=1.3) lines.push('📈 ACWR '+round2(acwr)+' – morgen nur leichte Aktivität.');
+  return lines.map(function(l){return '<p>'+l+'</p>';}).join('');
+}
+
+function buildPlan(rec, rd, dm, cm, f, wk){
+  var sig=rd.signals||{};
+  var hrvStatus=(sig.hrv&&sig.hrv.status)||'green';
+  var rhrStatus=(sig.rhr&&sig.rhr.status)||'green';
+  var sleepH=(sig.sleep?sig.sleep.hours:null)||cm.sleep_hours;
+  var tsb=(f.tsb!==undefined&&f.tsb!==null)?f.tsb:null;
+  var acwr=dm.acwr;
+  var ramp=(f.ramp_rate!==undefined&&f.ramp_rate!==null)?f.ramp_rate:null;
+
+  // Template: array of {icon,label,dur,zones,tss}
+  var base=[
+    ['🚴','Erholung/Technik',null,'Z1'],
+    ['⚡','Intervalle (5×3 min Z3)','75 min','Z3/Z1'],
+    ['🚶','Lockere Einheit',null,'Z1'],
+    ['🏃','Ausdauer','60–75 min','Z2'],
+    ['🚴','Lange Ausdauer','90 min','Z1–Z2'],
+    ['😴','Ruhetag',null,'–'],
+    ['🏃','Ausdauer','60–75 min','Z2'],
+    ['⚡','Tempo/Intervalle','60 min','Z3'],
+    ['🚶','Ausgleich (Dehnen/Gehen)',null,'Z1'],
+    ['😴','Ruhetag / sehr leicht',null,'–']
+  ];
+
+  var easyWeek = (tsb!==null&&tsb<-25) || hrvStatus==='red' || rhrStatus==='red';
+  if(easyWeek){
+    base=[
+      ['🚶','Erholung','30–45 min','Z1'],
+      ['😴','Ruhetag',null,'–'],
+      ['🚴','Ganz locker','45 min','Z1'],
+      ['🚶','Spazieren/Dehnen',null,'Z1'],
+      ['🚴','Leichte Ausdauer','60 min','Z1'],
+      ['😴','Ruhetag',null,'–'],
+      ['🚶','Erholung','30–45 min','Z1'],
+      ['😴','Ruhetag',null,'–'],
+      ['🚴','Ganz locker','45 min','Z1'],
+      ['🚶','Spazieren/Dehnen',null,'–']
+    ];
+  }else if(acwr!==null&&acwr!==undefined&&acwr>=1.3){
+    base=[
+      ['🚴','Erholung','45 min','Z1'],
+      ['🏃','Ausdauer leicht','45–60 min','Z1–Z2'],
+      ['🚶','Regeneration',null,'Z1'],
+      ['🚴','Ausdauer','60 min','Z2'],
+      ['😴','Ruhetag',null,'–'],
+      ['🚶','Ganz locker','45 min','Z1'],
+      ['🏃','Ausdauer leicht','60 min','Z1–Z2'],
+      ['😴','Ruhetag',null,'–'],
+      ['🚴','Leichte Ausdauer','60 min','Z1–Z2'],
+      ['🚶','Spazieren/Dehnen',null,'–']
+    ];
+  }else if(acwr!==null&&acwr!==undefined&&acwr<0.8){
+    base=[
+      ['🏃','Ausdauer','60–75 min','Z2'],
+      ['⚡','Intervalle (5×3 min Z3)','75 min','Z3/Z1'],
+      ['🚶','Lockere Einheit',null,'Z1'],
+      ['⚡','Tempoeinheit','60 min','Z3'],
+      ['🚴','Lange Ausdauer','90 min','Z1–Z2'],
+      ['😴','Ruhetag',null,'–'],
+      ['🏃','Ausdauer','60–75 min','Z2'],
+      ['⚡','Intervalle (4×4 min Z3)','75 min','Z3/Z1'],
+      ['🚶','Ausgleich',null,'Z1'],
+      ['🏃','Langer Lauf','90 min','Z1–Z2']
+    ];
+  }
+
+  // Day 1 (tomorrow) override based on today's verdict
+  var tomorrowLabel;
+  if(rec==="skip") tomorrowLabel=['🚶','Ganz locker','30 min','Z1'];
+  else if(rec==="modify") tomorrowLabel=['🚴','Erholungsfahrt','45–60 min','Z1–Z2'];
+  else if(tsb!==null&&tsb>10) tomorrowLabel=['⚡','Qualitätstag','60–75 min','Z3/Z1'];
+  else tomorrowLabel=['🏃','Ausdauer','60–75 min','Z2'];
+  base[0]=tomorrowLabel;
+  if(sleepH!==null&&sleepH!==undefined&&sleepH<6.5){
+    base[0][1]=base[0][1]+' (verkürzt)';
+  }
+
+  var rows=[];
+  var d=new Date(); d.setDate(d.getDate()+1);
+  var totalTss=0;
+  base.forEach(function(b,idx){
+    var tssVal = b[3]==='Z1'?(idx%3===0?25:15):b[3]==='Z1–Z2'?(idx%2===0?45:35):b[3]==='Z2'?60:b[3]==='Z3'?90:0;
+    if(b[2]==='–'||b[2]===null) tssVal=0;
+    totalTss+=tssVal;
+    rows.push(planRow(d,b[0],b[1],b[2],b[3],tssVal||null));
+    d.setDate(d.getDate()+1);
+  });
+
+  var note=[];
+  var lastWk=(wk&&wk.total_tss)?wk.total_tss:null;
+  note.push('📊 Geschätzte Wochenbelastung: ca. '+totalTss+' TSS'+(lastWk?(' (bisherige Woche: ~'+lastWk+' TSS)'):'')+'.');
+  if(ramp!==null) note.push((ramp>0?'📈':'📉')+' CTL-Trend: '+round1(ramp)+' pro Woche.');
+  if(acwr!==null&&acwr!==undefined){
+    if(acwr>=1.3) note.push('⚠️ ACWR '+round2(acwr)+' – Plan bewusst entlastend. Nach 2–3 Tagen neu bewerten.');
+    else if(acwr<0.8) note.push('✅ ACWR '+round2(acwr)+' – Plan leicht aufbauend, um Belastung zu steigern.');
+    else note.push('✅ ACWR '+round2(acwr)+' im optimalen Bereich.');
+  }
+  if(easyWeek) note.push('😴 Erholungswoche: HRV/Ruhepuls/TSB zeigen erhöhte Ermüdung. Ziel: Regeneration statt Leistung.');
+  note.push('💡 Regeln: HRV morgens checken – bei >10 % unter Baseline Einheit kürzen. Bei Krankheit/Schlafmangel immer Ruhe wählen.');
+
+  return rows.join('')+'<div class="note" style="margin-top:8px">'+note.join('<br>')+'</div>';
 }
 
 function render(D){
@@ -168,6 +307,11 @@ function render(D){
     lines.map(function(l){return '<p>'+l+'</p>';}).join('')+
     (hint?'<p class="hint">💡 '+hint+'</p>':'')+'</div>';
 
+  // ==== Tomorrow + Plan ====
+  document.getElementById('tmrw').innerHTML='<div class="rec rec-'+(rec==='go'?'go':rec==='skip'?'skip':'modify')+'" style="border-left-width:4px">'+
+    buildTomorrow(rec, rd, dm, cm, f)+'</div>';
+  document.getElementById('plan').innerHTML=buildPlan(rec, rd, dm, cm, f, rpt.weekly_summary);
+
   // ==== Signals ====
   var sigHtml="";
   // HRV
@@ -215,7 +359,7 @@ function render(D){
 
   // Sync header
   var upd=(rpt.metadata||{}).last_updated||"";
-  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.0"+(upd?" | Daten: "+upd.slice(0,16):"");
+  document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.1"+(upd?" | Daten: "+upd.slice(0,16):"");
   localStorage.setItem('coach_cache',JSON.stringify(D));
   localStorage.setItem('coach_cache_time',String(Date.now()));
 }
