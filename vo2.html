@@ -70,6 +70,7 @@ tr.cur td{color:var(--green);font-weight:600}
 <div class="card"><h2>📈 Trend &amp; Statistik</h2><div id="stats"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🗺️ Verlauf (90 Tage)</h2><div id="chart"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏋️ Training &amp; VO2max</h2><div id="tcmp"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>📊 Woche: TSS vs. VO2max</h2><div id="wk"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🎚️ Einordnung (Männer 60–69)</h2><div id="ref"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📤 Export</h2><div id="exp"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>📝 Hinweise</h2><div id="notes"><div class="loading">Lade...</div></div></div>
@@ -217,11 +218,9 @@ function exportTrain(){
   }));
 }
 
-function exportWeeks(){
-  var D=LAST_D||{};
-  var acts=D.recent_activities||[];
-  var vh=D.vo2max_history||[];
-  if(!acts.length){ alert('Keine Aktivitäten zum Exportieren vorhanden.'); return; }
+function weeklySummary(D){
+  var acts=(D&&D.recent_activities)||[];
+  var vh=(D&&D.vo2max_history)||[];
   var weeks={};
   acts.forEach(function(a){
     var ws=weekStart(a.date);
@@ -235,11 +234,64 @@ function exportWeeks(){
     var key=fmtDate(weekStart(x.date));
     if(weeks[key]) weeks[key].vo2s.push(x.vo2max);
   });
-  var keys=Object.keys(weeks).sort();
-  var rows=keys.map(function(k){
+  return Object.keys(weeks).sort().map(function(k){
     var g=weeks[k];
-    var vo2=g.vo2s.length?round1(g.vo2s.reduce(function(a,b){return a+b},0)/g.vo2s.length):'';
-    return [isoWeekLabel(g.start)+' ('+fmtDate(g.start)+')', g.count, round1(g.hours), g.tss, g.qual, vo2];
+    return {label:isoWeekLabel(g.start), start:fmtDate(g.start), count:g.count,
+            hours:round1(g.hours), tss:g.tss, qual:g.qual,
+            vo2avg:g.vo2s.length?round1(g.vo2s.reduce(function(a,b){return a+b},0)/g.vo2s.length):null};
+  });
+}
+
+function weeklyChart(D){
+  var wk=weeklySummary(D);
+  var el=document.getElementById('wk');
+  if(wk.length<2){ el.innerHTML='<div class="note">Wochenvergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>'; return; }
+  var maxTss=Math.max.apply(null,wk.map(function(w){return w.tss}));
+  var vo2s=wk.filter(function(w){return w.vo2avg!==null}).map(function(w){return w.vo2avg});
+  var minV=vo2s.length?Math.min.apply(null,vo2s):0;
+  var maxV=vo2s.length?Math.max.apply(null,vo2s):minV+1;
+  var vSpan=(maxV-minV)||1;
+  var W=320,H=150,PAD=16;
+  var n=wk.length;
+  var slot=W/n;
+  var barW=Math.min(26,slot*0.5);
+  var grid='';
+  for(var g=0;g<3;g++){
+    var gy=PAD+(g/2)*(H-PAD*2-8);
+    grid+='<line x1="'+PAD+'" y1="'+gy.toFixed(1)+'" x2="'+(W-PAD)+'" y2="'+gy.toFixed(1)+'" stroke="#2a2a4a" stroke-width="0.5"/>';
+  }
+  var bars=wk.map(function(w,i){
+    var x=i*slot+slot/2;
+    var bh=Math.max(2,(w.tss/maxTss)*(H-PAD*2-8));
+    var y=H-PAD-bh;
+    return '<rect x="'+(x-barW/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="#448aff" opacity="0.9"/>'+
+      '<text x="'+x.toFixed(1)+'" y="'+(y-3).toFixed(1)+'" font-size="7" fill="#e0e0e0" text-anchor="middle">'+w.tss+'</text>';
+  }).join('');
+  var linePts=[],circles='';
+  wk.forEach(function(w,i){
+    var x=i*slot+slot/2;
+    if(w.vo2avg!==null){
+      var y=H-PAD-((w.vo2avg-minV)/vSpan)*(H-PAD*2-8);
+      linePts.push(x.toFixed(1)+','+y.toFixed(1));
+      circles+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3" fill="#00e676"/>';
+    }
+  });
+  var line=linePts.length>1?'<polyline points="'+linePts.join(' ')+'" fill="none" stroke="#00e676" stroke-width="2"/>':'';
+  var labels=wk.map(function(w,i){
+    return '<text x="'+(i*slot+slot/2).toFixed(1)+'" y="'+(H-2).toFixed(1)+'" font-size="8" fill="#888" text-anchor="middle">'+w.label+'</text>';
+  }).join('');
+  el.innerHTML='<div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:170px;display:block">'+
+    grid+bars+line+circles+labels+'</svg>'+
+    '<div class="axis"><span>■ TSS (blau)</span><span>● ø-VO2max (grün): '+round1(minV)+'–'+round1(maxV)+'</span></div></div>'+
+    '<div class="note" style="margin-top:6px">Qualitätsreize pro Woche: '+wk.map(function(w){return w.label+' '+w.qual;}).join(' · ')+'</div>';
+}
+
+function exportWeeks(){
+  var D=LAST_D||{};
+  var wk=weeklySummary(D);
+  if(!wk.length){ alert('Keine Aktivitäten zum Exportieren vorhanden.'); return; }
+  var rows=wk.map(function(g){
+    return [g.label+' ('+g.start+')', g.count, g.hours, g.tss, g.qual, g.vo2avg!==null?g.vo2avg:''];
   });
   csvDownload('training_wochen.csv',['Woche','Wochenbeginn','Aktivitaeten','Dauer_h','TSS','Qualitaetsreize','VO2max_avg'],rows);
 }
@@ -323,6 +375,7 @@ function render(D){
     '</div>';
 
   renderTraining(D);
+  weeklyChart(D);
   document.getElementById('exp').innerHTML='<div class="note">Download als CSV (Excel-kompatibel, UTF-8):</div>'+
     '<button class="btn g" onclick="exportVo2()">⬇️ VO2max-Verlauf</button>'+
     '<button class="btn" onclick="exportTrain()">⬇️ Training (alle)</button>'+
