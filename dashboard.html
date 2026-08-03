@@ -41,6 +41,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .loading{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 .err{color:var(--accent);text-align:center;padding:10px;font-size:12px}
 .reload{display:block;margin:10px auto;padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.chartbox{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px}
+.chartbox .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px}
 
 .assess{line-height:1.6;font-size:13px;color:var(--text)}
 .assess h3{color:var(--accent);font-size:14px;margin:12px 0 6px}
@@ -91,12 +93,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 <div class="card"><h2>❤️ VO2max Trend</h2><div id="vo2C"><div class="loading">Lade...</div></div></div>
 <div class="card"><h2>🏃 Letzte Aktivitäten</h2><div id="acts"><div class="loading">Lade...</div></div></div>
 </div>
+<div class="sec" id="s-week">
+<div class="card"><h2>📊 Woche: TSS vs. VO2max</h2><div id="wk"><div class="loading">Lade...</div></div></div>
+<div class="card"><h2>💓 Woche: Vitalwerte vs. TSS</h2><div id="vitals"><div class="loading">Lade...</div></div></div>
+</div>
 </div>
 <div class="nav">
 <div class="ni active" onclick="go(this,'overview')"><div class="ic">📊</div>Übersicht</div>
 <div class="ni" onclick="go(this,'sleep')"><div class="ic">😴</div>Schlaf</div>
 <div class="ni" onclick="go(this,'body')"><div class="ic">⚖️</div>Körper</div>
 <div class="ni" onclick="go(this,'train')"><div class="ic">🚴</div>Training</div>
+<div class="ni" onclick="go(this,'week')"><div class="ic">📅</div>Woche</div>
 <div class="ni" onclick="location.href='coach.html'"><div class="ic">🧠</div>Coach</div>
 </div>
 <script>
@@ -124,7 +131,137 @@ function fetchFromGitHub(){
     .catch(function(e){clearTimeout(timeout);throw e;});
 }
 
-function render(D){
+function fetchHistory(){
+  var url="https://raw.githubusercontent.com/"+GH_REPO+"/main/history.json?v="+Date.now();
+  var controller=new AbortController();
+  var timeout=setTimeout(function(){controller.abort();},20000);
+  return fetch(url,{signal:controller.signal,cache:"no-store"})
+    .then(function(r){clearTimeout(timeout);if(!r.ok)throw new Error("GitHub "+r.status);return r.json()})
+    .catch(function(e){clearTimeout(timeout);throw e;});
+}
+
+function fmtDate(d){
+  var p=function(x){return (x<10?'0':'')+x;};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function weekStart(dateStr){
+  var d=new Date((dateStr||'').slice(0,10)+'T00:00:00');
+  var day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function isoWeekLabel(d){
+  var t=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  var dayNr=(t.getDay()+6)%7;
+  t.setDate(t.getDate()-dayNr+3);
+  var firstThu=new Date(t.getFullYear(),0,1);
+  if(firstThu.getDay()!==4){ firstThu.setMonth(0,1+((4-firstThu.getDay())+7)%7); }
+  var week=1+Math.round((t-firstThu)/(7*24*3600*1000));
+  return 'KW '+week;
+}
+function weeklySummary(D){
+  var acts=(D&&D.recent_activities)||[];
+  var vh=(D&&D.vo2max_history)||[];
+  var weeks={};
+  acts.forEach(function(a){
+    var ws=weekStart(a.date);
+    var key=fmtDate(ws);
+    if(!weeks[key]) weeks[key]={start:ws,count:0,hours:0,tss:0,qual:0,vo2s:[]};
+    var g=weeks[key];
+    g.count++; g.hours+=(a.duration_hours||0); g.tss+=(a.tss||0);
+  });
+  vh.forEach(function(x){
+    if(!x.date) return;
+    var key=fmtDate(weekStart(x.date));
+    if(weeks[key]) weeks[key].vo2s.push(x.vo2max);
+  });
+  return Object.keys(weeks).sort().map(function(k){
+    var g=weeks[k];
+    return {label:isoWeekLabel(g.start), start:fmtDate(g.start), tss:g.tss,
+            vo2avg:g.vo2s.length?Math.round(g.vo2s.reduce(function(a,b){return a+b},0)/g.vo2s.length*10)/10:null};
+  });
+}
+function weeklyVitals(H){
+  var days=(H&&H.daily_90d)||[];
+  if(!days.length) return [];
+  var weeks={};
+  days.forEach(function(d){
+    if(!d.date) return;
+    var key=fmtDate(weekStart(d.date));
+    if(!weeks[key]) weeks[key]={start:weekStart(d.date),tss:0,hrvs:[],sleeps:[],quals:[],rhrs:[]};
+    var g=weeks[key];
+    g.tss+=(d.total_tss||0);
+    if(d.hrv) g.hrvs.push(d.hrv);
+    if(d.sleep_hours) g.sleeps.push(d.sleep_hours);
+    if(d.sleep_quality) g.quals.push(d.sleep_quality);
+    if(d.rhr) g.rhrs.push(d.rhr);
+  });
+  return Object.keys(weeks).sort().map(function(k){
+    var g=weeks[k];
+    var avg=function(arr){return arr.length?Math.round(arr.reduce(function(a,b){return a+b},0)/arr.length*10)/10:null;};
+    return {label:isoWeekLabel(g.start), start:fmtDate(g.start), tss:g.tss,
+            hrv:avg(g.hrvs), sleep:avg(g.sleeps), sleepQ:avg(g.quals), rhr:avg(g.rhrs)};
+  });
+}
+function dualChart(weeks,vkey,vcolor,vlabel,vunit){
+  if(weeks.length<2) return '<div class="note">Vergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>';
+  var maxTss=Math.max.apply(null,weeks.map(function(w){return w.tss}))||1;
+  var vals=weeks.filter(function(w){return w[vkey]!==null}).map(function(w){return w[vkey]});
+  if(!vals.length) return '<div class="note">Keine '+vlabel+'-Daten vorhanden.</div>';
+  var minV=Math.min.apply(null,vals), maxV=Math.max.apply(null,vals);
+  var vSpan=(maxV-minV)||1;
+  var W=320,H=130,PAD=16;
+  var n=weeks.length, slot=W/n, barW=Math.min(22,slot*0.45);
+  var grid='';
+  for(var g=0;g<3;g++){
+    var gy=PAD+(g/2)*(H-PAD*2-8);
+    grid+='<line x1="'+PAD+'" y1="'+gy.toFixed(1)+'" x2="'+(W-PAD)+'" y2="'+gy.toFixed(1)+'" stroke="#2a2a4a" stroke-width="0.5"/>';
+  }
+  var bars=weeks.map(function(w,i){
+    var x=i*slot+slot/2;
+    var bh=Math.max(2,(w.tss/maxTss)*(H-PAD*2-8));
+    var y=H-PAD-bh;
+    return '<rect x="'+(x-barW/2).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="#448aff" opacity="0.85"/>';
+  }).join('');
+  var linePts=[],circles='';
+  weeks.forEach(function(w,i){
+    var x=i*slot+slot/2;
+    if(w[vkey]!==null){
+      var y=H-PAD-((w[vkey]-minV)/vSpan)*(H-PAD*2-8);
+      linePts.push(x.toFixed(1)+','+y.toFixed(1));
+      circles+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3" fill="'+vcolor+'"/>';
+    }
+  });
+  var line=linePts.length>1?'<polyline points="'+linePts.join(' ')+'" fill="none" stroke="'+vcolor+'" stroke-width="2"/>':'';
+  var labels=weeks.map(function(w,i){
+    return '<text x="'+(i*slot+slot/2).toFixed(1)+'" y="'+(H-2).toFixed(1)+'" font-size="8" fill="#888" text-anchor="middle">'+w.label+'</text>';
+  }).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:150px;display:block">'+
+    grid+bars+line+circles+labels+'</svg>'+
+    '<div class="axis"><span>■ TSS (blau)</span><span>● '+vlabel+': '+minV+'–'+maxV+' '+vunit+'</span></div>';
+}
+function weeklyCharts(D,H){
+  var wk=weeklySummary(D);
+  var wkEl=document.getElementById('wk');
+  if(wk.length>=2){
+    wkEl.innerHTML=dualChart(wk,'vo2avg','#00e676','ø-VO2max','ml/kg/min');
+  }else{
+    wkEl.innerHTML='<div class="note">Wochenvergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>';
+  }
+  var wkH=weeklyVitals(H);
+  var vtEl=document.getElementById('vitals');
+  if(wkH.length>=2){
+    vtEl.innerHTML=
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">💓 HRV (ø/Woche) vs. TSS</div>'+dualChart(wkH,'hrv','#00e676','HRV','ms')+
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">😴 Schlaf (ø/Woche) vs. TSS</div>'+dualChart(wkH,'sleep','#ffd600','Schlaf','h')+
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">🌟 Schlafqualität (ø/Woche, 1–4) vs. TSS</div>'+dualChart(wkH,'sleepQ','#00e5ff','Qualität','/4')+
+      '<div style="font-size:11px;color:var(--muted);margin:10px 0 2px">💓 Ruhepuls (ø/Woche) vs. TSS</div>'+dualChart(wkH,'rhr','#e94560','Ruhepuls','bpm');
+  }else{
+    vtEl.innerHTML='<div class="note">Wochenvergleich erscheint, sobald Daten aus mind. 2 Wochen vorliegen.</div>';
+  }
+}
+
+function render(D,H){
   try{
     var rpt=D||{};
     var cs=rpt.current_status||{};
@@ -362,6 +499,8 @@ function render(D){
     var ver=(rpt.metadata||{}).version||'?';
     var upd=(rpt.metadata||{}).last_updated||'';
     document.getElementById('sync').textContent='✅ '+new Date().toLocaleTimeString('de-DE')+' | v2.4'+(upd?' | '+upd.slice(5,16):'');
+    weeklyCharts(D,H);
+    try{localStorage.setItem('fd_cache_h',JSON.stringify(H||{}));}catch(e){}
     localStorage.setItem('fd_cache',JSON.stringify(D));
     generateAssessment(D);
     localStorage.setItem('fd_cache_time',String(Date.now()));
@@ -543,12 +682,14 @@ function load(){
 
   // Instant cache display
   if(cached&&now-cachedTime<600000){
-    try{render(JSON.parse(cached));}catch(e){}
+    var cachedH=null;
+    try{cachedH=JSON.parse(localStorage.getItem('fd_cache_h')||'null');}catch(e){}
+    try{render(JSON.parse(cached),cachedH);}catch(e){}
   }
 
   // Fetch fresh from GitHub
-  fetchFromGitHub()
-    .then(render)
+  Promise.all([fetchFromGitHub(),fetchHistory()])
+    .then(function(res){render(res[0],res[1]);})
     .catch(function(e){
       if(!cached){
         document.getElementById('sync').textContent='❌ '+e.message;
