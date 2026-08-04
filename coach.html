@@ -415,7 +415,7 @@ function render(D){
   var ah="";
   alerts.forEach(function(al){
     var ic=al.severity==="alarm"?"🔴":al.severity==="warning"?"🟡":"ℹ️";
-    ah+='<div class="alert">'+ic+' <b>'+al.metric+'</b>: '+al.context+'</div>';
+    ah+='<div class="alert">'+ic+' <b>'+deAlertName(al.metric)+'</b>: '+deAlertText(al.context)+'</div>';
   });
   document.getElementById('alerts').innerHTML=ah||'<div class="note" style="color:var(--green)">✅ Keine aktiven Alerts.</div>';
 
@@ -424,6 +424,59 @@ function render(D){
   document.getElementById('sync').textContent="✅ "+new Date().toLocaleTimeString('de-DE')+" | v1.4"+(upd?" | Daten: "+upd.slice(0,16):"");
   localStorage.setItem('coach_cache',JSON.stringify(D));
   localStorage.setItem('coach_cache_time',String(Date.now()));
+}
+
+
+// Übersetzung der Alert-Metrik-Namen
+function deAlertName(m){
+  var names={acwr:"ACWR",monotony:"Monotonie",hrv:"HRV",rhr:"Ruhepuls",recovery_index:"Erholungsindex",strain:"Belastung",durability:"Ausdauerfähigkeit",tid_distribution:"TID-Verteilung",race_taper:"Taper",race_week:"Rennwoche",race_week_tsb:"TSB-Prognose"};
+  return names[m]||m;
+}
+// Fallback-Übersetzung für noch englische Alert-Texte (z.B. aus dem Cache)
+function deAlertText(c){
+  if(!c) return c;
+  var rules=[
+    [/^ACWR ([\d.]+) above safe range\. Injury\/overreach risk elevated\.$/,"ACWR $1 über dem sicheren Bereich. Verletzungs-/Überlastungsrisiko erhöht."],
+    [/^ACWR ([\d.]+) at edge of optimal range\. Monitor closely\. Alarm at 1\.35\.$/,"ACWR $1 am Rand des optimalen Bereichs. Genau beobachten. Alarm ab 1,35."],
+    [/^Monotony ([\d.]+) ≥ 2\.5 but (.*?)\. Structural artifact, not overuse risk\. Will normalize as 7-day window rolls forward\.(.*)$/,"Monotonie $1 ≥ 2,5, aber $2. Strukturelles Artefakt, kein Überlastungsrisiko. Normalisiert sich, sobald das 7-Tage-Fenster weiterrollt.$3"],
+    [/^Monotony ([\d.]+) ≥ 2\.5\. Overuse risk elevated\. Vary training load\.(.*)$/,"Monotonie $1 ≥ 2,5. Überlastungsrisiko erhöht. Trainingsbelastung variieren.$2"],
+    [/^Monotony ([\d.]+) approaching threshold but (.*?)\. Expected, not actionable\.(.*)$/,"Monotonie $1 nähert sich dem Schwellenwert, aber $2. Erwartbar, kein Handlungsbedarf.$3"],
+    [/^Monotony ([\d.]+) approaching overuse threshold\. Alarm at 2\.5\.(.*)$/,"Monotonie $1 nähert sich dem Überlastungsschwellenwert. Alarm ab 2,5.$2"],
+    [/\(total monotony ([\d.]+) inflated by multi-sport training; (.*?) monotony ([\d.]+) used for alerting\)/,"(Gesamt-Monotonie $1 durch Multisport-Training erhöht; $2-Monotonie $3 für die Warnung verwendet)"],
+    [/deload pattern detected \(7-day TSS ([\d.]+) is ([\d.]+)% below 28-day weekly avg ([\d.]+)\)/,"Deload-Muster erkannt (7-Tage-TSS $1 liegt $2% unter dem 28-Tage-Wochendurchschnitt $3)"],
+    [/^Strain ([\d.]+) > 3500\. High cumulative stress\. Consider load reduction\.$/,"Belastung (Strain) $1 > 3500. Hohe kumulative Beanspruchung. Belastungsreduktion erwägen."],
+    [/^RI ([\d.]+) < 0\.6\. Immediate deload required\.$/,"Erholungsindex (RI) $1 < 0,6. Sofortige Entlastung erforderlich."],
+    [/^RI ([\d.]+) < 0\.7 for 2\+ consecutive days \(yesterday ([\d.]+)\)\. Monitor — if persists 3\+ days, deload review required\.$/,"Erholungsindex (RI) $1 < 0,7 an 2+ aufeinanderfolgenden Tagen (gestern $2). Beobachten – hält dies 3+ Tage an, ist eine Entlastungs-Überprüfung nötig."],
+    [/^HRV ([\d.]+) is ([\d.]+)% below baseline, persisting ([\d.]+) days\.$/,"HRV $1 liegt $2% unter dem Basiswert, seit $3 Tagen anhaltend."],
+    [/^HRV ([\d.]+) is ([\d.]+)% below baseline\. Monitor — alarm if persists >2 days\.$/,"HRV $1 liegt $2% unter dem Basiswert. Beobachten – Alarm, wenn länger als 2 Tage anhaltend."],
+    [/^RHR ([\d.]+) is ([\d.]+)bpm above baseline, persisting ([\d.]+) days\.$/,"Ruhepuls $1 liegt $2 bpm über dem Basiswert, seit $3 Tagen anhaltend."],
+    [/^RHR ([\d.]+) is ([\d.]+)bpm above baseline\. Monitor — alarm if persists >2 days\.$/,"Ruhepuls $1 liegt $2 bpm über dem Basiswert. Beobachten – Alarm, wenn länger als 2 Tage anhaltend."],
+    [/^Sustained high decoupling \(([\d.]+)% 28d mean\)\. Aerobic efficiency concern — review volume and recovery\.$/,"Anhaltend hohes Decoupling ($1% 28-Tage-Mittel). Bedenken zur aeroben Effizienz – Umfang und Erholung überprüfen."],
+    [/^Durability declining: 7d mean decoupling ([\d.]+)% vs 28d ([\d.]+)%\. Check fatigue and recovery\.$/,"Ausdauerfähigkeit rückläufig: 7-Tage-Decoupling-Mittel $1% vs. 28-Tage $2%. Ermüdung und Erholung prüfen."],
+    [/^Repeated poor durability: ([\d.]+) sessions with >5% decoupling in last 7 days\.$/,"Wiederholt schwache Ausdauerfähigkeit: $1 Einheiten mit >5% Decoupling in den letzten 7 Tagen."],
+    [/^Acute depolarization: 7d PI ([\d.]+) vs 28d PI ([\d.]+)\. Grey zone or threshold work displacing polarized structure\.$/,"Akute Depolarisation: 7-Tage-PI $1 vs. 28-Tage-PI $2. Grauer Bereich oder Schwellentraining verdrängt die polarisierte Struktur."],
+    [/^TID shift: 7d (.*?) vs 28d (.*?)\. Training distribution changing\.$/,"TID-Verschiebung: 7 Tage $1 vs. 28 Tage $2. Trainingsverteilung ändert sich."],
+    [/^RACE_A '(.+?)' in (\d+) days\. Begin volume reduction \(target 41-60% over 2 weeks\)\. Maintain intensity\. CTL should peak now or within the next few days\.$/,"RACE_A '$1' in $2 Tagen. Umfangsreduzierung beginnen (Ziel 41-60% über 2 Wochen). Intensität beibehalten. Der CTL sollte jetzt oder in den nächsten Tagen seinen Höhepunkt erreichen."],
+    [/^Projected race-day TSB ([\d.-]+) is below target range ([\d-]+)-([\d-]+)\. Consider additional rest to reach target\.$/,"Prognostizierter Renn-TSB $1 liegt unter dem Zielbereich $2-$3. Zusätzliche Erholung in Betracht ziehen, um das Ziel zu erreichen."],
+    [/^Race week (D-?\d+) of '(.+?)'\. Today: (.*?), (\d+)-(\d+) TSS\. (.*)$/,"Rennwoche $1 von '$2'. Heute: $3, $4-$5 TSS. $6"]
+  ];
+  for(var i=0;i<rules.length;i++){
+    if(rules[i][0].test(c)) c = c.replace(rules[i][0],rules[i][1]);
+  }
+  var phrases={
+    "Last key session":"Letzte Schlüsseleinheit","Recovery":"Erholung","Moderate endurance":"Moderater Ausdauerlauf",
+    "Easy / rest":"Leicht / Ruhe","Opener":"Opener","Rest / minimal":"Ruhe / minimal","Race day":"Renntag",
+    "Pre-race-week":"Vor der Rennwoche","Normal training":"Normales Training","Race effort":"Rennbelastung",
+    "Z1-Z2 only":"Nur Z1-Z2","Z1 only if active":"Nur Z1, falls aktiv",
+    "3-5 efforts Z4-Z5 (1-3 min)":"3-5 Belastungen Z4-Z5 (1-3 Min.)",
+    "3-5 efforts Z4-Z6 (20-60s), high cadence, full recovery":"3-5 Belastungen Z4-Z6 (20-60 Sek.), hohe Trittfrequenz, volle Erholung",
+    "3-4 efforts Z4 only (20-60s), moderate cadence, full recovery":"3-4 Belastungen nur Z4 (20-60 Sek.), moderate Trittfrequenz, volle Erholung",
+    "5-6 efforts Z4-Z6 (10-30s), high cadence, full recovery":"5-6 Belastungen Z4-Z6 (10-30 Sek.), hohe Trittfrequenz, volle Erholung",
+    "Z1-Z2 + 2-3 race-pace touches":"Z1-Z2 + 2-3 Rennpacedurchgänge",
+    "Taper onset detected.":"Taper-Beginn erkannt."
+  };
+  for(var k in phrases){ if(c.indexOf(k)>-1) c=c.split(k).join(phrases[k]); }
+  return c;
 }
 
 function load(){

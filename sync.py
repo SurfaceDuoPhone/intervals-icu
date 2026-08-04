@@ -6205,7 +6205,7 @@ class IntervalsSync:
                     "value": acwr,
                     "severity": "alarm",
                     "threshold": "1.35",
-                    "context": f"ACWR {acwr} above safe range. Injury/overreach risk elevated.",
+                    "context": f"ACWR {acwr} über dem sicheren Bereich. Verletzungs-/Überlastungsrisiko erhöht.",
                     "persistence_days": None,
                     "tier": 2
                 })
@@ -6215,7 +6215,7 @@ class IntervalsSync:
                     "value": acwr,
                     "severity": "warning",
                     "threshold": "1.3",
-                    "context": f"ACWR {acwr} at edge of optimal range. Monitor closely. Alarm at 1.35.",
+                    "context": f"ACWR {acwr} am Rand des optimalen Bereichs. Genau beobachten. Alarm ab 1,35.",
                     "persistence_days": None,
                     "tier": 2
                 })
@@ -6230,7 +6230,7 @@ class IntervalsSync:
             # Build context string for multi-sport cases
             multi_sport_note = ""
             if is_multi_sport and primary_sport_monotony is not None and monotony is not None and primary_sport_monotony < monotony:
-                multi_sport_note = f" (total monotony {monotony} inflated by multi-sport training; {primary_sport} monotony {primary_sport_monotony} used for alerting)"
+                multi_sport_note = f" (Gesamt-Monotonie {monotony} durch Multisport-Training erhöht; {primary_sport}-Monotonie {primary_sport_monotony} für die Warnung verwendet)"
 
             if effective_monotony >= 2.5:
                 if deload_context:
@@ -6239,7 +6239,7 @@ class IntervalsSync:
                         "value": effective_monotony,
                         "severity": "info",
                         "threshold": 2.5,
-                        "context": f"Monotony {effective_monotony} ≥ 2.5 but {deload_context}. Structural artifact, not overuse risk. Will normalize as 7-day window rolls forward.{multi_sport_note}",
+                        "context": f"Monotonie {effective_monotony} ≥ 2,5, aber {deload_context}. Strukturelles Artefakt, kein Überlastungsrisiko. Normalisiert sich, sobald das 7-Tage-Fenster weiterrollt.{multi_sport_note}",
                         "persistence_days": None,
                         "tier": 2
                     })
@@ -6249,7 +6249,7 @@ class IntervalsSync:
                         "value": effective_monotony,
                         "severity": "alarm",
                         "threshold": 2.5,
-                        "context": f"Monotony {effective_monotony} ≥ 2.5. Overuse risk elevated. Vary training load.{multi_sport_note}",
+                        "context": f"Monotonie {effective_monotony} ≥ 2,5. Überlastungsrisiko erhöht. Trainingsbelastung variieren.{multi_sport_note}",
                         "persistence_days": None,
                         "tier": 2
                     })
@@ -6260,7 +6260,7 @@ class IntervalsSync:
                         "value": effective_monotony,
                         "severity": "info",
                         "threshold": 2.3,
-                        "context": f"Monotony {effective_monotony} approaching threshold but {deload_context}. Expected, not actionable.{multi_sport_note}",
+                        "context": f"Monotonie {effective_monotony} nähert sich dem Schwellenwert, aber {deload_context}. Erwartbar, kein Handlungsbedarf.{multi_sport_note}",
                         "persistence_days": None,
                         "tier": 2
                     })
@@ -6270,7 +6270,7 @@ class IntervalsSync:
                         "value": effective_monotony,
                         "severity": "warning",
                         "threshold": 2.3,
-                        "context": f"Monotony {effective_monotony} approaching overuse threshold. Alarm at 2.5.{multi_sport_note}",
+                        "context": f"Monotonie {effective_monotony} nähert sich dem Überlastungsschwellenwert. Alarm ab 2,5.{multi_sport_note}",
                         "persistence_days": None,
                         "tier": 2
                     })
@@ -6282,7 +6282,7 @@ class IntervalsSync:
                 "value": strain,
                 "severity": "alarm",
                 "threshold": 3500,
-                "context": f"Strain {strain} > 3500. High cumulative stress. Consider load reduction.",
+                "context": f"Belastung (Strain) {strain} > 3500. Hohe kumulative Beanspruchung. Belastungsreduktion erwägen.",
                 "persistence_days": None,
                 "tier": 2
             })
@@ -6299,7 +6299,7 @@ class IntervalsSync:
                     "value": ri,
                     "severity": "alarm",
                     "threshold": 0.6,
-                    "context": f"RI {ri} < 0.6. Immediate deload required.",
+                    "context": f"Erholungsindex (RI) {ri} < 0,6. Sofortige Entlastung erforderlich.",
                     "persistence_days": None,
                     "tier": 1
                 })
@@ -6309,7 +6309,7 @@ class IntervalsSync:
                     "value": ri,
                     "severity": "warning",
                     "threshold": 0.7,
-                    "context": f"RI {ri} < 0.7 for 2+ consecutive days (yesterday {ri_yesterday}). Monitor — if persists 3+ days, deload review required.",
+                    "context": f"Erholungsindex (RI) {ri} < 0,7 an 2+ aufeinanderfolgenden Tagen (gestern {ri_yesterday}). Beobachten – hält dies 3+ Tage an, ist eine Entlastungs-Überprüfung nötig.",
                     "persistence_days": 2,
                     "tier": 1
                 })
@@ -6327,7 +6327,7 @@ class IntervalsSync:
                         "value": round(latest_hrv, 1),
                         "severity": "alarm",
                         "threshold": f"↓>20% vs baseline ({round(hrv_baseline_7d, 1)})",
-                        "context": f"HRV {round(latest_hrv, 1)} is {round(abs(hrv_change_pct), 1)}% below baseline, persisting {hrv_low_days} days.",
+                        "context": f"HRV {round(latest_hrv, 1)} liegt {round(abs(hrv_change_pct), 1)}% unter dem Basiswert, seit {hrv_low_days} Tagen anhaltend.",
                         "persistence_days": hrv_low_days,
                         "tier": 1
                     })
@@ -6337,7 +6337,7 @@ class IntervalsSync:
                         "value": round(latest_hrv, 1),
                         "severity": "warning",
                         "threshold": f"↓>20% vs baseline ({round(hrv_baseline_7d, 1)})",
-                        "context": f"HRV {round(latest_hrv, 1)} is {round(abs(hrv_change_pct), 1)}% below baseline. Monitor — alarm if persists >2 days.",
+                        "context": f"HRV {round(latest_hrv, 1)} liegt {round(abs(hrv_change_pct), 1)}% unter dem Basiswert. Beobachten – Alarm, wenn länger als 2 Tage anhaltend.",
                         "persistence_days": hrv_low_days,
                         "tier": 1
                     })
@@ -6355,7 +6355,7 @@ class IntervalsSync:
                         "value": round(latest_rhr, 1),
                         "severity": "alarm",
                         "threshold": f"↑≥5bpm vs baseline ({round(rhr_baseline_7d, 1)})",
-                        "context": f"RHR {round(latest_rhr, 1)} is {round(rhr_change, 1)}bpm above baseline, persisting {rhr_high_days} days.",
+                        "context": f"Ruhepuls {round(latest_rhr, 1)} liegt {round(rhr_change, 1)} bpm über dem Basiswert, seit {rhr_high_days} Tagen anhaltend.",
                         "persistence_days": rhr_high_days,
                         "tier": 1
                     })
@@ -6365,7 +6365,7 @@ class IntervalsSync:
                         "value": round(latest_rhr, 1),
                         "severity": "warning",
                         "threshold": f"↑≥5bpm vs baseline ({round(rhr_baseline_7d, 1)})",
-                        "context": f"RHR {round(latest_rhr, 1)} is {round(rhr_change, 1)}bpm above baseline. Monitor — alarm if persists >2 days.",
+                        "context": f"Ruhepuls {round(latest_rhr, 1)} liegt {round(rhr_change, 1)} bpm über dem Basiswert. Beobachten – Alarm, wenn länger als 2 Tage anhaltend.",
                         "persistence_days": rhr_high_days,
                         "tier": 1
                     })
@@ -6393,7 +6393,7 @@ class IntervalsSync:
                 "value": dur_mean_28d,
                 "severity": "alarm",
                 "threshold": "28d mean > 5% (N28>=5)",
-                "context": f"Sustained high decoupling ({dur_mean_28d}% 28d mean). Aerobic efficiency concern — review volume and recovery.",
+                "context": f"Anhaltend hohes Decoupling ({dur_mean_28d}% 28-Tage-Mittel). Bedenken zur aeroben Effizienz – Umfang und Erholung überprüfen.",
                 "persistence_days": None,
                 "tier": 3
             })
@@ -6407,7 +6407,7 @@ class IntervalsSync:
                 "value": dur_mean_7d,
                 "severity": "warning",
                 "threshold": "7d > 28d by > 2% (N7>=3, N28>=5)",
-                "context": f"Durability declining: 7d mean decoupling {dur_mean_7d}% vs 28d {dur_mean_28d}%. Check fatigue and recovery.",
+                "context": f"Ausdauerfähigkeit rückläufig: 7-Tage-Decoupling-Mittel {dur_mean_7d}% vs. 28-Tage {dur_mean_28d}%. Ermüdung und Erholung prüfen.",
                 "persistence_days": None,
                 "tier": 3
             })
@@ -6420,7 +6420,7 @@ class IntervalsSync:
                 "value": dur_high_drift_7d,
                 "severity": "warning",
                 "threshold": ">= 3 sessions with >5% decoupling in 7d",
-                "context": f"Repeated poor durability: {dur_high_drift_7d} sessions with >5% decoupling in last 7 days.",
+                "context": f"Wiederholt schwache Ausdauerfähigkeit: {dur_high_drift_7d} Einheiten mit >5% Decoupling in den letzten 7 Tagen.",
                 "persistence_days": None,
                 "tier": 3
             })
@@ -6437,7 +6437,7 @@ class IntervalsSync:
                 "value": pi_7d,
                 "severity": "warning",
                 "threshold": "7d PI < 2.0, 28d PI >= 2.0",
-                "context": f"Acute depolarization: 7d PI {pi_7d} vs 28d PI {pi_28d}. Grey zone or threshold work displacing polarized structure.",
+                "context": f"Akute Depolarisation: 7-Tage-PI {pi_7d} vs. 28-Tage-PI {pi_28d}. Grauer Bereich oder Schwellentraining verdrängt die polarisierte Struktur.",
                 "persistence_days": None,
                 "tier": 3
             })
@@ -6449,7 +6449,7 @@ class IntervalsSync:
                 "value": cls_7d,
                 "severity": "warning",
                 "threshold": "7d/28d classification mismatch",
-                "context": f"TID shift: 7d {cls_7d} vs 28d {cls_28d}. Training distribution changing.",
+                "context": f"TID-Verschiebung: 7 Tage {cls_7d} vs. 28 Tage {cls_28d}. Trainingsverteilung ändert sich.",
                 "persistence_days": None,
                 "tier": 3
             })
@@ -6478,7 +6478,7 @@ class IntervalsSync:
         deficit_pct = ((weekly_avg_28d - tss_7d_total) / weekly_avg_28d) * 100
         
         if deficit_pct >= 20:
-            return f"deload pattern detected (7-day TSS {round(tss_7d_total)} is {round(deficit_pct)}% below 28-day weekly avg {round(weekly_avg_28d)})"
+            return f"Deload-Muster erkannt (7-Tage-TSS {round(tss_7d_total)} liegt {round(deficit_pct)}% unter dem 28-Tage-Wochendurchschnitt {round(weekly_avg_28d)})"
         
         return None
 
@@ -8897,9 +8897,9 @@ class IntervalsSync:
             taper_alert["event_date"] = taper_race["date"]
             taper_alert["days_until"] = taper_race["days_until"]
             taper_alert["message"] = (
-                f"RACE_A '{taper_race['name']}' in {taper_race['days_until']} days. "
-                f"Begin volume reduction (target 41-60% over 2 weeks). Maintain intensity. "
-                f"CTL should peak now or within the next few days."
+                f"RACE_A '{taper_race['name']}' in {taper_race['days_until']} Tagen. "
+                f"Umfangsreduzierung beginnen (Ziel 41-60% über 2 Wochen). Intensität beibehalten. "
+                f"Der CTL sollte jetzt oder in den nächsten Tagen seinen Höhepunkt erreichen."
             )
         
         # Race-week: RACE_A or RACE_B within 7 days
@@ -9087,23 +9087,23 @@ class IntervalsSync:
         """
         # Day protocol definitions: (label, min_pct, max_pct, zones, purpose)
         protocols = {
-            7: ("Last key session", 0.75, 1.00, "3-5 efforts Z4-Z5 (1-3 min)", "Fitness confirmation. Verify strong power/HR response."),
-            6: ("Recovery", 0.00, 0.30, "Z1-Z2 only", "Active recovery."),
-            5: ("Moderate endurance", 0.40, 0.60, "Z1-Z2 + 2-3 race-pace touches", "Maintain feel without adding fatigue."),
-            4: ("Easy / rest", 0.00, 0.40, "Z1-Z2 only", "Volume reduction. Carb loading begins if applicable."),
-            3: ("Easy / rest", 0.00, 0.40, "Z1-Z2 only", "Taper tantrums expected (D-4 to D-2). Normal — not lost fitness."),
-            2: ("Opener", 0.30, 0.50, "3-5 efforts Z4-Z6 (20-60s), high cadence, full recovery", "Neuromuscular activation."),
-            1: ("Rest / minimal", 0.00, 0.20, "Z1 only if active", "Final rest, logistics, equipment check."),
-            0: ("Race day", 0.00, 0.00, "Race effort", "Go/no-go assessment. Execute race plan.")
+            7: ("Letzte Schlüsseleinheit", 0.75, 1.00, "3-5 Belastungen Z4-Z5 (1-3 Min.)", "Fitnessbestätigung. Kräftige Leistungs-/Pulsreaktion prüfen."),
+            6: ("Erholung", 0.00, 0.30, "Nur Z1-Z2", "Aktive Erholung."),
+            5: ("Moderater Ausdauerlauf", 0.40, 0.60, "Z1-Z2 + 2-3 Rennpacedurchgänge", "Gefühl beibehalten, ohne zusätzliche Ermüdung."),
+            4: ("Leicht / Ruhe", 0.00, 0.40, "Nur Z1-Z2", "Umfangsreduzierung. Kohlenhydratladung beginnt, falls zutreffend."),
+            3: ("Leicht / Ruhe", 0.00, 0.40, "Nur Z1-Z2", "Taper-Launen erwartbar (D-4 bis D-2). Normal – keine Fitnessverluste."),
+            2: ("Opener", 0.30, 0.50, "3-5 Belastungen Z4-Z6 (20-60 Sek.), hohe Trittfrequenz, volle Erholung", "Neuromuskuläre Aktivierung."),
+            1: ("Ruhe / minimal", 0.00, 0.20, "Nur Z1, falls aktiv", "Letzte Ruhe, Logistik, Materialcheck."),
+            0: ("Renntag", 0.00, 0.00, "Rennbelastung", "Go/No-Go-Bewertung. Rennplan umsetzen.")
         }
         
         # Default for days > 7 (shouldn't happen in race week, but defensive)
         if days_until > 7:
             return {
-                "label": "Pre-race-week",
+                "label": "Vor der Rennwoche",
                 "load_target_tss": None,
-                "zones": "Normal training",
-                "purpose": "Race week protocol not yet active for this day."
+                "zones": "Normales Training",
+                "purpose": "Rennwochen-Protokoll ist für diesen Tag noch nicht aktiv."
             }
         
         label, min_pct, max_pct, zones, purpose = protocols.get(days_until, protocols[0])
@@ -9111,16 +9111,16 @@ class IntervalsSync:
         # Adjust opener intensity by duration class
         if days_until == 2:
             if duration_class == "long_endurance":
-                zones = "3-4 efforts Z4 only (20-60s), moderate cadence, full recovery"
-                purpose = "Light neuromuscular activation. Preserve glycogen."
+                zones = "3-4 Belastungen nur Z4 (20-60 Sek.), moderate Trittfrequenz, volle Erholung"
+                purpose = "Leichte neuromuskuläre Aktivierung. Glykogen schonen."
             elif duration_class == "short_intense":
-                zones = "5-6 efforts Z4-Z6 (10-30s), high cadence, full recovery"
-                purpose = "Full neuromuscular activation for short, intense effort."
+                zones = "5-6 Belastungen Z4-Z6 (10-30 Sek.), hohe Trittfrequenz, volle Erholung"
+                purpose = "Volle neuromuskuläre Aktivierung für kurze, intensive Belastung."
         
         # For long endurance events, prefer easy endurance over complete rest on D-4/D-3
         if days_until in (3, 4) and duration_class == "long_endurance":
             min_pct = 0.20  # Nudge minimum up — easy spin preferred over full rest
-            purpose = f"{purpose} Easy endurance preferred over complete rest for long events."
+            purpose = f"{purpose} Bei langen Events ist leichte Ausdauer besser als völlige Ruhe."
         
         min_tss = round(ctl * min_pct)
         max_tss = round(ctl * max_pct)
@@ -9144,7 +9144,7 @@ class IntervalsSync:
                 "value": taper.get("days_until"),
                 "severity": "info",
                 "threshold": "RACE_A within 8-14 days",
-                "context": taper.get("message", "Taper onset detected."),
+                "context": taper.get("message", "Taper-Beginn erkannt."),
                 "persistence_days": None,
                 "tier": 1
             })
@@ -9161,8 +9161,8 @@ class IntervalsSync:
                 "severity": "info",
                 "threshold": f"{rw.get('event_category')} within 7 days",
                 "context": (
-                    f"Race week {rw.get('current_day')} of '{rw.get('event_name')}'. "
-                    f"Today: {today_proto.get('label', '?')}, "
+                    f"Rennwoche {rw.get('current_day')} von '{rw.get('event_name')}'. "
+                    f"Heute: {today_proto.get('label', '?')}, "
                     f"{load.get('min', 0)}-{load.get('max', 0)} TSS. "
                     f"{today_proto.get('zones', '')}"
                 ),
@@ -9181,9 +9181,9 @@ class IntervalsSync:
                         "severity": "warning",
                         "threshold": f"TSB target {tsb_range.get('min')}-{tsb_range.get('max')}",
                         "context": (
-                            f"Projected race-day TSB {projected} is below target range "
+                            f"Prognostizierter Renn-TSB {projected} liegt unter dem Zielbereich "
                             f"{tsb_range.get('min')}-{tsb_range.get('max')}. "
-                            f"Consider additional rest to reach target."
+                            f"Zusätzliche Erholung in Betracht ziehen, um das Ziel zu erreichen."
                         ),
                         "persistence_days": None,
                         "tier": 1
