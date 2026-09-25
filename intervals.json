@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T12:00:52.543968",
+  "generated_at": "2026-09-25T17:05:46.377851",
   "version": "3.112",
   "script_hash": "7a9d3a6663ba",
   "scan_hours": 72,
@@ -408,6 +408,100 @@
           "zone": 2,
           "training_load": 2.4128175,
           "decoupling": -31.058239
+        }
+      ]
+    },
+    {
+      "activity_id": "i190263608",
+      "date": "2026-09-25",
+      "type": "Ride",
+      "name": "Lehrte Radfahren",
+      "interval_summary": [
+        "4x 19m50s 89bpm",
+        "1x 1h8m 91bpm",
+        "4x 15m31s 105bpm",
+        "1x 12m54s 108bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "1190s@89bpm",
+          "duration_secs": 1244,
+          "avg_hr": 88,
+          "max_hr": 99,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1190s@89bpm",
+          "duration_secs": 1133,
+          "avg_hr": 87,
+          "max_hr": 112,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1190s@89bpm",
+          "duration_secs": 1129,
+          "avg_hr": 93,
+          "max_hr": 120,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1190s@89bpm",
+          "duration_secs": 1255,
+          "avg_hr": 87,
+          "max_hr": 107,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "4128s@91bpm",
+          "duration_secs": 4128,
+          "avg_hr": 91,
+          "max_hr": 108,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "931s@105bpm",
+          "duration_secs": 940,
+          "avg_hr": 99,
+          "max_hr": 106,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "931s@105bpm",
+          "duration_secs": 923,
+          "avg_hr": 103,
+          "max_hr": 121,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "931s@105bpm",
+          "duration_secs": 938,
+          "avg_hr": 106,
+          "max_hr": 121,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "931s@105bpm",
+          "duration_secs": 922,
+          "avg_hr": 112,
+          "max_hr": 127,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "774s@108bpm",
+          "duration_secs": 774,
+          "avg_hr": 108,
+          "max_hr": 125,
+          "zone": 1
         }
       ]
     }
