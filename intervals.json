@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-05T05:57:03.872870",
+  "generated_at": "2026-10-05T13:09:20.897347",
   "version": "3.112",
   "script_hash": "7a9d3a6663ba",
   "scan_hours": 72,
@@ -698,6 +698,74 @@
           "zone": 2,
           "training_load": 5.008178,
           "decoupling": -12.671575
+        }
+      ]
+    },
+    {
+      "activity_id": "i193810122",
+      "date": "2026-10-05",
+      "type": "Ride",
+      "name": "Lehrte Radfahren",
+      "interval_summary": [
+        "1x 22m8s 84bpm",
+        "6x 18m26s 96bpm"
+      ],
+      "intervals": [
+        {
+          "type": "WORK",
+          "label": "1328s@84bpm",
+          "duration_secs": 1328,
+          "avg_hr": 84,
+          "max_hr": 95,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 1173,
+          "avg_hr": 91,
+          "max_hr": 126,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 1103,
+          "avg_hr": 95,
+          "max_hr": 118,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 1077,
+          "avg_hr": 98,
+          "max_hr": 114,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 1030,
+          "avg_hr": 93,
+          "max_hr": 105,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 999,
+          "avg_hr": 101,
+          "max_hr": 117,
+          "zone": 1
+        },
+        {
+          "type": "WORK",
+          "label": "1106s@96bpm",
+          "duration_secs": 1255,
+          "avg_hr": 100,
+          "max_hr": 119,
+          "zone": 1
         }
       ]
     }
