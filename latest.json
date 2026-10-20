@@ -70,7 +70,7 @@
   },
   "metadata": {
     "athlete_id": "REDACTED",
-    "last_updated": "2026-10-20T01:32:30.230973",
+    "last_updated": "2026-10-20T06:34:18.834394",
     "data_range_days": 7,
     "extended_range_days": 28,
     "version": "3.112"
@@ -427,10 +427,10 @@
       }
     },
     "current_metrics": {
-      "weight_kg": 79.8,
+      "weight_kg": 77.2,
       "display": {
         "weight": {
-          "value": 79.8,
+          "value": 77.2,
           "unit": "kg"
         }
       },
@@ -449,8 +449,8 @@
       "hydration": null,
       "spO2": 96.0,
       "blood_glucose": null,
-      "systolic": 118,
-      "diastolic": 70,
+      "systolic": 121,
+      "diastolic": 66,
       "baevsky_si": null,
       "lactate": null,
       "respiration": 15.0,
@@ -467,27 +467,27 @@
       "readiness": null
     },
     "weight": {
-      "weight_latest_kg": 79.8,
-      "weight_latest_date": "2026-10-19",
-      "wkg_current": 2.33,
+      "weight_latest_kg": 77.2,
+      "weight_latest_date": "2026-10-20",
+      "wkg_current": 2.41,
       "wkg_ftp_source": "tested",
       "ftp_setting_date": "2026-10-08",
       "wkg_block_start": 2.36,
-      "wkg_block_end": 2.33,
-      "wkg_block_delta": -0.03,
-      "weight_7d_avg_kg": 78.3,
-      "weight_28d_slope_kg_per_week": 0.038,
+      "wkg_block_end": 2.41,
+      "wkg_block_delta": 0.05,
+      "weight_7d_avg_kg": 78.1,
+      "weight_28d_slope_kg_per_week": -0.017,
       "display": {
         "weight_latest": {
-          "value": 79.8,
+          "value": 77.2,
           "unit": "kg"
         },
         "weight_7d_avg": {
-          "value": 78.3,
+          "value": 78.1,
           "unit": "kg"
         },
         "weight_28d_slope_per_week": {
-          "value": 0.038,
+          "value": -0.017,
           "unit": "kg/week"
         }
       }
@@ -697,56 +697,56 @@
           "start": "2026-09-09",
           "end": "2026-10-20"
         },
-        "weight_kg": 79.8,
+        "weight_kg": 77.2,
         "weight_source": "wellness_recent",
         "cycling": {
           "anchors": {
             "300s": {
               "actual_watts": 220,
-              "actual_wpkg": 2.76,
+              "actual_wpkg": 2.85,
               "actual_hr": 156,
               "pct_lthr": 104.0,
               "source": "observed_outdoor",
               "coggan_watts": 197,
-              "coggan_wpkg": 2.47,
+              "coggan_wpkg": 2.55,
               "cp_model_watts": 231,
-              "cp_model_wpkg": 2.89,
+              "cp_model_wpkg": 2.99,
               "model_divergence_pct": -4.8
             },
             "600s": {
               "actual_watts": 203,
-              "actual_wpkg": 2.54,
+              "actual_wpkg": 2.63,
               "actual_hr": 154,
               "pct_lthr": 102.7,
               "source": "observed_outdoor",
               "coggan_watts": 180,
-              "coggan_wpkg": 2.26,
+              "coggan_wpkg": 2.33,
               "cp_model_watts": 208,
-              "cp_model_wpkg": 2.61,
+              "cp_model_wpkg": 2.69,
               "model_divergence_pct": -2.4
             },
             "1200s": {
               "actual_watts": 193,
-              "actual_wpkg": 2.42,
+              "actual_wpkg": 2.5,
               "actual_hr": 153,
               "pct_lthr": 102.0,
               "source": "observed_outdoor",
               "coggan_watts": 173,
-              "coggan_wpkg": 2.17,
+              "coggan_wpkg": 2.24,
               "cp_model_watts": 197,
-              "cp_model_wpkg": 2.47,
+              "cp_model_wpkg": 2.55,
               "model_divergence_pct": -2.0
             },
             "1800s": {
               "actual_watts": 188,
-              "actual_wpkg": 2.36,
+              "actual_wpkg": 2.44,
               "actual_hr": 151,
               "pct_lthr": 100.7,
               "source": "observed_outdoor",
               "coggan_watts": 167,
-              "coggan_wpkg": 2.09,
+              "coggan_wpkg": 2.16,
               "cp_model_watts": 193,
-              "cp_model_wpkg": 2.42,
+              "cp_model_wpkg": 2.5,
               "model_divergence_pct": -2.6
             },
             "3600s": {
@@ -756,9 +756,9 @@
               "pct_lthr": 74.7,
               "source": null,
               "coggan_watts": 160,
-              "coggan_wpkg": 2.01,
+              "coggan_wpkg": 2.07,
               "cp_model_watts": 190,
-              "cp_model_wpkg": 2.38,
+              "cp_model_wpkg": 2.46,
               "model_divergence_pct": null
             },
             "5400s": {
@@ -768,9 +768,9 @@
               "pct_lthr": 73.3,
               "source": null,
               "coggan_watts": 153,
-              "coggan_wpkg": 1.92,
+              "coggan_wpkg": 1.98,
               "cp_model_watts": 188,
-              "cp_model_wpkg": 2.36,
+              "cp_model_wpkg": 2.44,
               "model_divergence_pct": null
             },
             "7200s": {
@@ -780,9 +780,9 @@
               "pct_lthr": 70.7,
               "source": null,
               "coggan_watts": 145,
-              "coggan_wpkg": 1.82,
+              "coggan_wpkg": 1.88,
               "cp_model_watts": 188,
-              "cp_model_wpkg": 2.36,
+              "cp_model_wpkg": 2.44,
               "model_divergence_pct": null
             }
           },
@@ -858,7 +858,7 @@
     "p_max": 454,
     "power_model_source": "wellness.sportInfo",
     "vo2max": null,
-    "calculation_timestamp": "2026-10-20T01:32:30.230036",
+    "calculation_timestamp": "2026-10-20T06:34:18.833076",
     "data_quality": {
       "hrv_data_points": 6,
       "rhr_data_points": 7,
@@ -2672,9 +2672,12 @@
     },
     {
       "date": "2026-10-20",
-      "weight_kg": null,
+      "weight_kg": 77.2,
       "display": {
-        "weight": null
+        "weight": {
+          "value": 77.2,
+          "unit": "kg"
+        }
       },
       "resting_hr": 50,
       "hrv_rmssd": null,
@@ -2695,8 +2698,8 @@
       "hydration": null,
       "spO2": 96.0,
       "blood_glucose": null,
-      "systolic": null,
-      "diastolic": null,
+      "systolic": 121,
+      "diastolic": 66,
       "baevsky_si": null,
       "lactate": null,
       "respiration": 15.0,
