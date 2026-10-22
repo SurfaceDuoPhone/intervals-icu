@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T01:49:14.357715",
+  "generated_at": "2026-10-22T06:43:12.003960",
   "version": "3.112",
   "script_hash": "7a9d3a6663ba",
   "scan_hours": 72,
@@ -1280,6 +1280,27 @@
           "zone": 2,
           "training_load": 7.564757,
           "decoupling": -8.495042
+        }
+      ]
+    },
+    {
+      "activity_id": "i200242147",
+      "date": "2026-10-22",
+      "type": "VirtualRide",
+      "name": "Indoor-Radfahren",
+      "interval_summary": null,
+      "intervals": [
+        {
+          "type": "RECOVERY",
+          "duration_secs": 3956,
+          "avg_power": 123,
+          "max_power": 216,
+          "avg_hr": 120,
+          "max_hr": 144,
+          "avg_cadence": 68.53286,
+          "zone": 2,
+          "training_load": 49.61787,
+          "decoupling": 2.8182576
         }
       ]
     }
